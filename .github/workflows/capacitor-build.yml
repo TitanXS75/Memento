@@ -30,7 +30,7 @@ jobs:
           java-version: '17'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run unit tests
         run: pnpm test
