@@ -4,7 +4,7 @@
 
 - **Node.js:** v20+ with `pnpm` v12
 - **Android Studio:** Ladybug or newer
-- **JDK:** 17 or 21 (bundled with Android Studio)
+- **JDK:** 21 (required by Capacitor 8+)
 - **Android SDK:** Platform 34 or 35 + Build-Tools 34.0.0+
 - **Physical Device:** Android 10+ with Developer Mode & USB Debugging enabled
 
