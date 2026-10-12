@@ -61,7 +61,7 @@ button { cursor: pointer; }
 .onboarding-shell { position: relative; display: grid; min-height: 100svh; overflow: hidden; place-items: center; padding: 20px; background: radial-gradient(circle at 15% 20%, #e4ddf3 0, transparent 32%), radial-gradient(circle at 85% 80%, #f1dfd5 0, transparent 30%), var(--background); }
 .onboarding-panel { position: relative; width: min(100%, 1080px); border: 1px solid color-mix(in srgb, var(--border) 72%, transparent); border-radius: 32px; padding: clamp(24px, 5vw, 62px); background: color-mix(in srgb, var(--surface) 82%, transparent); box-shadow: 0 30px 90px #30244a18; backdrop-filter: blur(20px); }
 .onboarding-panel-simple { min-height: 0; }
-.onboarding-form { width: min(100%, 620px); padding-top: 30px; animation: onboarding-copy-in .55s cubic-bezier(.2,.8,.2,1) both; }
+.onboarding-form { width: min(100%, 620px); margin: 0 auto; padding-top: 30px; animation: onboarding-copy-in .55s cubic-bezier(.2,.8,.2,1) both; }
 .onboarding-form-centered { padding-top: clamp(24px, 6vh, 56px); padding-bottom: clamp(20px, 5vh, 48px); }
 .carousel-dot { width: 7px; height: 7px; border: 0; border-radius: 50%; padding: 0; background: var(--surface-strong); transition: width .25s, background .25s; }
 .carousel-dot-active { width: 28px; border-radius: 99px; background: var(--accent); }

@@ -2,6 +2,7 @@
 
 import {
   ArrowUpRight,
+  Globe,
   HardDrive,
   Image as ImageIcon,
   Moon,
@@ -15,10 +16,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { CreateTripModal } from '@/components/app/CreateTripModal'
 import { EmptyState } from '@/components/app/EmptyState'
+import { Logo } from '@/components/app/Logo'
 import { TripCard } from '@/components/app/TripCard'
 import { useTripsStore } from '@/lib/store/trips'
 import { useUiStore } from '@/lib/store/ui'
 import { formatBytes } from '@/lib/services/hash'
+import { calculateStorageStats, getStoredStorageStats, type StorageStats } from '@/lib/services/storage'
+import { RefreshCw } from 'lucide-react'
 
 export default function HomePage() {
   const { trips, loading, error, loadTrips, createTrip, archiveTrip, restoreTrip } = useTripsStore(
@@ -36,21 +40,29 @@ export default function HomePage() {
   const activeTrips = useMemo(() => trips.filter((t) => !t.archivedAt), [trips])
 
   const [showCreate, setShowCreate] = useState(false)
-  const [availableStorage, setAvailableStorage] = useState<number | null>(null)
+  const [storageStats, setStorageStats] = useState<StorageStats | null>(null)
+  const [isRefreshingStorage, setIsRefreshingStorage] = useState(false)
   const [clock, setClock] = useState<Date | null>(null)
+
+  const refreshStorage = async () => {
+    setIsRefreshingStorage(true)
+    try {
+      const stats = await calculateStorageStats()
+      setStorageStats(stats)
+    } finally {
+      setIsRefreshingStorage(false)
+    }
+  }
 
   useEffect(() => {
     loadTrips()
     setClock(new Date())
     const timer = setInterval(() => setClock(new Date()), 1000)
 
-    if (navigator.storage?.estimate) {
-      navigator.storage.estimate().then(({ quota, usage }) => {
-        if (quota != null && usage != null) {
-          setAvailableStorage(Math.max(0, quota - usage))
-        }
-      }).catch(() => {})
-    }
+    // Load initial cached stats then calculate live
+    const cached = getStoredStorageStats()
+    if (cached) setStorageStats(cached)
+    calculateStorageStats().then(setStorageStats).catch(() => {})
 
     return () => clearInterval(timer)
   }, [loadTrips])
@@ -71,13 +83,9 @@ export default function HomePage() {
   return (
     <>
       {/* Top bar */}
-      <header className="flex items-center justify-between pb-6 sm:pb-8 lg:pb-10">
+      <header className="flex items-center justify-between pb-3 sm:pb-4">
         <div className="flex items-center gap-2 lg:hidden">
-          <svg className="size-5 text-[var(--accent)]" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="21 5" opacity="0.4" />
-            <path d="M6 22 L11 11 L16 19 L21 11 L26 22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="16" cy="19" r="2.5" fill="var(--coral)" />
-          </svg>
+          <Logo className="size-6 text-[var(--accent)]" />
           <span className="font-sans text-xl">Memento</span>
         </div>
         <div className="hidden lg:block">
@@ -98,7 +106,7 @@ export default function HomePage() {
       </header>
 
       {/* Mobile time */}
-      <div className="mb-8 mt-2 lg:hidden">
+      <div className="mb-5 mt-1 lg:hidden">
         <p className="eyebrow">Personal memory workspace</p>
         <div className="mt-1 flex items-baseline gap-3">
           <p className="text-3xl font-normal tracking-[-0.02em]">{timeLabel}</p>
@@ -106,7 +114,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="module-enter pt-2 sm:pt-4">
+      <div className="module-enter mt-2">
         {/* Hero + Storage */}
         <div className="grid gap-5 xl:grid-cols-[1.45fr_1fr]">
           <div className="hero-card">
@@ -140,32 +148,59 @@ export default function HomePage() {
               <div>
                 <p className="eyebrow">Available storage</p>
                 <p className="mt-2 font-sans text-4xl">
-                  {availableStorage === null ? '—' : formatBytes(availableStorage)}
+                  {storageStats ? formatBytes(storageStats.availableBytes) : '—'}
                 </p>
               </div>
-              <div className="icon-box">
-                <HardDrive size={18} aria-hidden="true" />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={refreshStorage}
+                  disabled={isRefreshingStorage}
+                  aria-label="Recalculate device storage"
+                  className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface-strong)] transition"
+                >
+                  <RefreshCw size={15} className={isRefreshingStorage ? 'animate-spin text-[var(--accent)]' : ''} />
+                </button>
+                <div className="icon-box">
+                  <HardDrive size={18} aria-hidden="true" />
+                </div>
               </div>
             </div>
             <div className="mt-7 h-2 overflow-hidden rounded-full bg-[var(--surface-strong)]">
-              <div className="h-full w-0 rounded-full bg-[var(--accent)]" />
+              <div
+                className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
+                style={{
+                  width: `${storageStats ? Math.max(2, Math.min(100, Math.round((storageStats.usedBytes / storageStats.totalBytes) * 100))) : 0}%`,
+                }}
+              />
             </div>
             <p className="mt-3 text-[11px] text-[var(--muted)]">
-              Quota reported by this browser — not total device storage.
+              {storageStats
+                ? `${formatBytes(storageStats.usedBytes)} used of ${formatBytes(storageStats.totalBytes)} total space`
+                : 'Calculating device storage…'}
             </p>
+
+            {storageStats?.environment.isWeb && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl bg-[var(--surface-strong)] p-2.5 text-[11px] text-[var(--muted)] leading-relaxed">
+                <Globe size={13} className="mt-0.5 shrink-0 text-[var(--accent)]" />
+                <p>
+                  <strong>Can&apos;t detect physical phone storage</strong> — You are using {storageStats.environment.browserName} on the web. Showing browser sandbox quota.
+                </p>
+              </div>
+            )}
             <div className="mt-7 grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-5">
               <div className="flex items-center gap-3">
                 <div className="icon-box"><ImageIcon size={17} aria-hidden="true" /></div>
                 <div>
                   <p className="eyebrow">Photos</p>
-                  <p className="mt-0.5 text-sm font-medium">0</p>
+                  <p className="mt-0.5 text-sm font-medium">{storageStats?.photosCount ?? 0}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="icon-box"><Video size={17} aria-hidden="true" /></div>
                 <div>
                   <p className="eyebrow">Videos</p>
-                  <p className="mt-0.5 text-sm font-medium">0</p>
+                  <p className="mt-0.5 text-sm font-medium">{storageStats?.videosCount ?? 0}</p>
                 </div>
               </div>
             </div>
@@ -173,7 +208,7 @@ export default function HomePage() {
         </div>
 
         {/* Recent trips */}
-        <div className="mt-10 flex items-end justify-between">
+        <div className="mt-6 flex items-end justify-between">
           <div>
             <p className="eyebrow">Your collection</p>
             <h2 className="mt-1 font-sans text-2xl">Recent trips</h2>

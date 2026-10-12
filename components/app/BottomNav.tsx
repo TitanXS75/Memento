@@ -3,6 +3,7 @@
 import { ArrowUpRight, FolderPlus, LayoutGrid, Settings, Wifi } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Logo } from './Logo'
 
 const NAV_ITEMS = [
   { label: 'Home',     path: '/home',     icon: LayoutGrid },
@@ -47,11 +48,7 @@ export function Sidebar({ profileInitials, onEditProfile }: {
   return (
     <aside className="hidden w-[246px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar)] px-6 py-7 lg:flex">
       <div className="flex items-center gap-2.5 px-2">
-        <svg className="size-6 text-[var(--accent)]" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="21 5" opacity="0.4" />
-          <path d="M6 22 L11 11 L16 19 L21 11 L26 22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="16" cy="19" r="2.5" fill="var(--coral)" />
-        </svg>
+        <Logo className="size-7 text-[var(--accent)]" />
         <span className="font-sans text-[22px] tracking-[-0.03em]">Memento</span>
       </div>
 

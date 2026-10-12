@@ -75,10 +75,35 @@ export default function SettingsPage() {
             <div className="flex-1">
               <p className="text-sm font-medium">Native app</p>
               <p className="mt-1 text-xs text-[var(--muted)]">
-                Android and iOS support via Capacitor — coming in Phase 3.
+                Android and iOS support via Capacitor.
               </p>
             </div>
             <ChevronRight className="text-[var(--muted)]" size={17} aria-hidden="true" />
+          </div>
+        </div>
+
+        {/* Reset / Onboarding re-run option */}
+        <div className="surface-card">
+          <p className="eyebrow mb-4">Storage Permissions</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Reset Profile & Recalculate</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Re-opens the welcome setup screen to review storage & media permissions.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.removeItem('memento-profile')
+                  window.location.href = '/onboarding'
+                } catch {}
+              }}
+              className="secondary-button text-xs"
+            >
+              Setup Wizard
+            </button>
           </div>
         </div>
 
