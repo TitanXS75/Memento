@@ -37,6 +37,11 @@ All notable changes to Memento are documented in this file.
 - Add Media to Trip modal with automatic date range matching
 - Fullscreen Media Lightbox modal with keyboard navigation (Esc, Left/Right arrows)
 - Trip cover photo selection and banner display on trip cards
+- Multi-step ZIP export wizard with date and media type filtering
+- Streaming ZIP creation via fflate with live progress and cancel support
+- Cross-platform archive sharing service with Web Share API and download fallback
+- Persistent archives management screen with status tracking and deletion
+- Unit tests for archives store and lifecycle management
 
 ### Technical
 

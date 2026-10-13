@@ -89,13 +89,13 @@ Each approach sacrifices either **privacy**, **quality**, or **convenience**. Me
 
 | Requirement | Priority | Status |
 |-------------|----------|--------|
-| Select trip date range for export | P0 | ⏳ Pending |
-| Create ZIP with original-quality media | P0 | ⏳ Pending |
-| Stream ZIP creation (fflate, Web Worker) | P0 | ⏳ Pending |
-| Share ZIP via native share sheet | P0 | ⏳ Pending |
-| Export progress indicator | P0 | ⏳ Pending |
-| Archive list with status | P1 | ⏳ Pending |
-| Delete archived ZIPs | P1 | ⏳ Pending |
+| Select trip date range for export | P0 | ✅ Done |
+| Create ZIP with original-quality media | P0 | ✅ Done |
+| Stream ZIP creation (fflate, Web Worker) | P0 | ✅ Done |
+| Share ZIP via native share sheet | P0 | ✅ Done |
+| Export progress indicator | P0 | ✅ Done |
+| Archive list with status | P1 | ✅ Done |
+| Delete archived ZIPs | P1 | ✅ Done |
 
 ### 3.5 Settings & Profile
 

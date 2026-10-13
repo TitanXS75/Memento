@@ -164,3 +164,23 @@ export async function createZipArchive(
     }
   })
 }
+
+/**
+ * Convert a media URI (Data URL, blob URL, or web path) to Uint8Array bytes.
+ */
+export async function fetchMediaBytes(uri: string): Promise<Uint8Array> {
+  if (uri.startsWith('data:')) {
+    const comma = uri.indexOf(',')
+    const base64 = uri.slice(comma + 1)
+    const binary = atob(base64)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i)
+    }
+    return bytes
+  }
+  const res = await fetch(uri)
+  const buf = await res.arrayBuffer()
+  return new Uint8Array(buf)
+}
+
