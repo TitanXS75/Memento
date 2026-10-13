@@ -4,6 +4,38 @@ All notable changes to Memento are documented in this file.
 
 ---
 
+## v0.4.0 — Trip Sync Protocol & Release Hardening
+
+### Added
+
+- Trip Sync Protocol service (`lib/services/sync.ts`) with portable manifest exchange
+- Intelligent diff calculation comparing memories between devices by SHA-256 hash
+- Non-destructive metadata merge expanding trip date ranges and description updates
+- Export & import of standalone `.memento-sync` JSON bundles
+- Interactive `TripSyncModal` in Trip Details for peer discovery, live diff inspection, and one-tap sync
+- Accessibility enhancements across all modals with keyboard navigation and Escape-to-close listeners
+- Production build validation with static SSG export and zero TypeScript warnings
+- Comprehensive unit test suite covering trip sync protocol and manifest diffs
+
+---
+
+## v0.3.0 — Nearby Transfer (Mode A)
+
+### Added
+
+- Local Wi-Fi / Hotspot peer discovery and device identity persistence
+- Direct peer-to-peer chunked media transfer service with 2 MB chunks
+- Full-file SHA-256 integrity verification before library insertion
+- Duplicate detection by contentHash with skip / preserve handling
+- Peer consent dialog (IncomingTransferModal) requiring explicit user confirmation
+- Manual IP and port connection modal for direct LAN connectivity
+- SendMediaModal supporting trip association and photo/video selection
+- Active transfer queue with real-time progress bars, speed gauges, and retry/cancel actions
+- Persistent transfer history stored in IndexedDB transfers table
+- Unit test suite for transfer service, transfers store, and nearby discovery store
+
+---
+
 ## v0.1.0 — Foundation
 
 ### Added

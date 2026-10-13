@@ -1,12 +1,13 @@
 'use client'
 
-import { ArrowLeft, Calendar, Edit2, ImageIcon, Package, Trash2, Video } from 'lucide-react'
+import { ArrowLeft, Calendar, Edit2, ImageIcon, Package, RefreshCw, Trash2, Video } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { ConfirmDialog } from '@/components/app/ConfirmDialog'
 import { TripMediaGallery } from '@/components/app/TripMediaGallery'
+import { TripSyncModal } from '@/components/app/TripSyncModal'
 import type { MediaItem } from '@/lib/db/schema'
 import {
   getTripMediaItems,
@@ -45,6 +46,7 @@ export function TripDetailView({ id }: TripDetailViewProps) {
   const [nameInput, setNameInput] = useState('')
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
   const [loadingMedia, setLoadingMedia] = useState(true)
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false)
 
   useEffect(() => { loadTrips() }, [loadTrips])
 
@@ -160,6 +162,15 @@ export function TripDetailView({ id }: TripDetailViewProps) {
         </div>
 
         <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setIsSyncModalOpen(true)}
+            className="secondary-button text-xs"
+            id="trip-sync-btn"
+          >
+            <RefreshCw size={13} aria-hidden="true" />
+            <span>Sync Trip</span>
+          </button>
           {trip.archivedAt ? (
             <button
               type="button"
@@ -240,6 +251,17 @@ export function TripDetailView({ id }: TripDetailViewProps) {
           onCancel={() => setConfirmDelete(false)}
         />
       )}
+
+      <TripSyncModal
+        trip={trip}
+        mediaItems={mediaItems}
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        onSynced={async () => {
+          await loadTrips()
+          await loadMedia()
+        }}
+      />
     </>
   )
 }

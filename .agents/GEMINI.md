@@ -146,13 +146,13 @@ docs/
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| 1 | In Progress | Architecture validation, Capacitor setup, docs |
-| 2 | Pending | UI foundation, navigation refactor, local DB, trip CRUD persistence |
-| 3 | Pending | Media library, thumbnails, date-based browsing |
-| 4 | Pending | ZIP export, archive management, native share sheet |
-| 5 | Pending | Nearby transfer (real LAN-based, native plugins) |
-| 6 | Pending | Trip sync protocol, device identity, metadata exchange |
-| 7 | Pending | Hardening, accessibility, release prep |
+| 1 | Completed | Architecture validation, Capacitor setup, docs |
+| 2 | Completed | UI foundation, navigation refactor, local DB, trip CRUD persistence |
+| 3 | Completed | Media library, thumbnails, date-based browsing |
+| 4 | Completed | ZIP export, archive management, native share sheet |
+| 5 | Completed | Nearby transfer (real LAN-based, native plugins) |
+| 6 | Completed | Trip sync protocol, device identity, metadata exchange |
+| 7 | Completed | Hardening, accessibility, release prep |
 
 ---
 

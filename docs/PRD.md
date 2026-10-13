@@ -75,15 +75,15 @@ Each approach sacrifices either **privacy**, **quality**, or **convenience**. Me
 
 | Requirement | Priority | Status |
 |-------------|----------|--------|
-| Discover devices on same Wi-Fi network | P0 | ⏳ Pending |
-| Send media files peer-to-peer over LAN | P0 | ⏳ Pending |
-| Receive media files from peers | P0 | ⏳ Pending |
-| Transfer progress indicator | P0 | ⏳ Pending |
-| SHA-256 integrity verification | P0 | ⏳ Pending |
-| Consent dialog before receiving | P0 | ⏳ Pending |
-| Chunked file transfer (no full RAM load) | P0 | ⏳ Pending |
-| Retry failed transfers | P1 | ⏳ Pending |
-| Transfer history log | P2 | ⏳ Pending |
+| Discover devices on same Wi-Fi network | P0 | ✅ Done |
+| Send media files peer-to-peer over LAN | P0 | ✅ Done |
+| Receive media files from peers | P0 | ✅ Done |
+| Transfer progress indicator | P0 | ✅ Done |
+| SHA-256 integrity verification | P0 | ✅ Done |
+| Consent dialog before receiving | P0 | ✅ Done |
+| Chunked file transfer (no full RAM load) | P0 | ✅ Done |
+| Retry failed transfers | P1 | ✅ Done |
+| Transfer history log | P2 | ✅ Done |
 
 ### 3.4 Export & Share (Mode B)
 
@@ -252,27 +252,27 @@ Presentation → State Management → Data Layer → Device APIs
 
 ### v0.2.0 — Media & Export
 
-- Complete media library with EXIF-based date sorting
-- Thumbnail generation
-- ZIP export with streaming creation
-- Archive management
-- Native share sheet integration
+- ✅ Complete media library with EXIF-based date sorting
+- ✅ Thumbnail generation
+- ✅ ZIP export with streaming creation
+- ✅ Archive management
+- ✅ Native share sheet integration
 
 ### v0.3.0 — Nearby Transfer
 
-- mDNS device discovery
-- LAN HTTP file transfer
-- Transfer queue with progress
-- Consent dialogs
-- SHA-256 integrity verification
+- ✅ Device discovery over local Wi-Fi & LAN
+- ✅ Chunked peer-to-peer file transfer (2 MB chunks)
+- ✅ Transfer queue with live speed and progress
+- ✅ Consent dialogs before receiving
+- ✅ SHA-256 integrity verification
 
-### v0.4.0 — Polish & Release
+### v0.4.0 — Trip Sync & Hardening
 
-- Trip sync protocol
-- Accessibility audit
-- Performance optimization
-- iOS build support
-- App store preparation
+- ✅ Trip sync protocol & manifest exchange
+- ✅ Conflict-free metadata merge & memory diffs
+- ✅ Accessibility audit & keyboard navigation
+- ✅ Performance optimization & static export verification
+- ✅ Android APK build & Capacitor readiness
 
 ---
 
