@@ -92,10 +92,10 @@ export function ExportStepReview({
             <Download size={16} /> Save to device
           </button>
           <Link
-            href="/archives"
+            href="/trips"
             className="mt-2 text-center text-xs text-[var(--muted)] hover:text-[var(--foreground)] underline"
           >
-            View all archives
+            Back to trips
           </Link>
         </div>
       </div>

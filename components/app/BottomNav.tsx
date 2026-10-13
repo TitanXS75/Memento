@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, FolderPlus, Images, LayoutGrid, Package, Settings } from 'lucide-react'
+import { ArrowUpRight, FolderPlus, Images, LayoutGrid, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Logo } from './Logo'
@@ -9,14 +9,6 @@ const NAV_ITEMS = [
   { label: 'Home',     path: '/home',     icon: LayoutGrid },
   { label: 'Trips',    path: '/trips',    icon: FolderPlus },
   { label: 'Media',    path: '/media',    icon: Images },
-  { label: 'Settings', path: '/settings', icon: Settings },
-] as const
-
-const SIDEBAR_ITEMS = [
-  { label: 'Home',     path: '/home',     icon: LayoutGrid },
-  { label: 'Trips',    path: '/trips',    icon: FolderPlus },
-  { label: 'Media',    path: '/media',    icon: Images },
-  { label: 'Archives', path: '/archives', icon: Package },
   { label: 'Settings', path: '/settings', icon: Settings },
 ] as const
 
@@ -62,7 +54,7 @@ export function Sidebar({ profileInitials, onEditProfile }: {
 
       <p className="eyebrow mt-14 px-2">Your space</p>
       <nav className="mt-4 flex flex-col gap-1" aria-label="Main navigation">
-        {SIDEBAR_ITEMS.map(({ label, path, icon: Icon }) => {
+        {NAV_ITEMS.map(({ label, path, icon: Icon }) => {
           const active = pathname.startsWith(path)
           return (
             <Link
