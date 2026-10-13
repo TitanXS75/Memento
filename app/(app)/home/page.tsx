@@ -21,6 +21,7 @@ import { TripCard } from '@/components/app/TripCard'
 import { useTripsStore } from '@/lib/store/trips'
 import { useUiStore } from '@/lib/store/ui'
 import { formatBytes } from '@/lib/services/hash'
+import { openNearbyServices } from '@/lib/services/media'
 import { calculateStorageStats, getStoredStorageStats, type StorageStats } from '@/lib/services/storage'
 import { RefreshCw } from 'lucide-react'
 
@@ -80,6 +81,21 @@ export default function HomePage() {
     addToast('Trip restored.', 'success')
   }
 
+  const handleNearbyServices = async () => {
+    try {
+      const opened = await openNearbyServices({
+        title: 'Memento — Nearby Share',
+        text: 'Share memories offline directly with Memento.',
+      })
+      if (!opened) {
+        // Fallback for desktop browsers without Web Share
+        window.location.href = '/nearby'
+      }
+    } catch {
+      window.location.href = '/nearby'
+    }
+  }
+
   return (
     <>
       {/* Top bar */}
@@ -95,14 +111,25 @@ export default function HomePage() {
             <p className="text-xs text-[var(--muted)]">{dateLabel}</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          className="theme-button"
-        >
-          {theme === 'light' ? <Moon size={17} aria-hidden="true" /> : <Sun size={17} aria-hidden="true" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleNearbyServices}
+            id="home-nearby-btn"
+            className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-1.5 text-xs font-medium text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition"
+            aria-label="Open Nearby / Quick Share"
+          >
+            Nearby
+          </button>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            className="theme-button"
+          >
+            {theme === 'light' ? <Moon size={17} aria-hidden="true" /> : <Sun size={17} aria-hidden="true" />}
+          </button>
+        </div>
       </header>
 
       {/* Mobile time */}

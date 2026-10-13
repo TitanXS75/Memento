@@ -69,20 +69,11 @@ export default function NearbyPage() {
           </div>
 
           {/* Requirement notice */}
-          <div className="flex gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
-            <Info size={16} className="mt-0.5 shrink-0 text-[var(--accent)]" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-medium">Requires a shared Wi-Fi network</p>
-              <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-                The nearby transfer feature uses your local Wi-Fi network (HTTP) to send files
-                directly between devices — no cloud, no internet required. Android-to-Android,
-                iPhone-to-iPhone, and Android-to-iPhone are all supported.
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
-                <strong>Coming in Phase 5:</strong> real device discovery via mDNS, chunked
-                file transfer, progress tracking, consent dialogs, and integrity verification.
-              </p>
-            </div>
+          <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+            <Wifi size={16} className="shrink-0 text-[var(--accent)]" aria-hidden="true" />
+            <p className="text-xs text-[var(--muted)]">
+              Direct peer transfer over shared Wi-Fi or mobile hotspot. No cloud or internet needed.
+            </p>
           </div>
         </div>
       </div>

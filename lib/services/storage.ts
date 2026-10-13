@@ -1,4 +1,6 @@
+import { Capacitor } from '@capacitor/core'
 import { getDb } from '@/lib/db'
+import type { MediaItem } from '@/lib/db/schema'
 
 export interface EnvironmentInfo {
   isWeb: boolean
@@ -42,11 +44,7 @@ export function detectEnvironment(): EnvironmentInfo {
   }
 
   const ua = window.navigator.userAgent || ''
-  const isCapacitor = Boolean(
-    (window as any).Capacitor?.isNativePlatform?.() ||
-    (window as any).Capacitor?.platform === 'android' ||
-    (window as any).Capacitor?.platform === 'ios'
-  )
+  const isCapacitor = Capacitor.isNativePlatform() || Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios'
 
   let osName = 'Unknown OS'
   if (/android/i.test(ua)) osName = 'Android'
@@ -108,7 +106,7 @@ export async function requestStorageAndMediaPermissions(): Promise<{
 
   if (typeof navigator !== 'undefined' && 'permissions' in navigator) {
     try {
-      const res = await (navigator.permissions as any).query({ name: 'persistent-storage' }).catch(() => null)
+      const res = await navigator.permissions.query({ name: 'persistent-storage' as PermissionName }).catch(() => null)
       if (res?.state) {
         storagePermission = res.state === 'granted' ? 'granted' : res.state === 'denied' ? 'denied' : 'prompt'
       }
@@ -151,17 +149,28 @@ export async function calculateStorageStats(): Promise<StorageStats> {
 
   try {
     const db = await getDb()
-    const allMedia = await db.getAll('mediaItems')
+    const allMedia: MediaItem[] = await db.getAll('mediaItems')
     for (const item of allMedia) {
-      if (item.type === 'video') {
+      if (item.mediaType === 'video') {
         videosCount++
       } else {
         photosCount++
       }
-      mediaBytes += item.fileSizeBytes || 0
+      mediaBytes += item.sizeBytes || 0
     }
   } catch {
     // If DB is not ready or empty
+  }
+
+  try {
+    const { getDeviceMedia } = await import('@/lib/services/media')
+    const devMedia = await getDeviceMedia('all', 500)
+    photosCount += devMedia.images.length
+    videosCount += devMedia.videos.length
+    mediaBytes += devMedia.images.reduce((acc, it) => acc + it.size, 0)
+    mediaBytes += devMedia.videos.reduce((acc, it) => acc + it.size, 0)
+  } catch {
+    // ignore
   }
 
   const saved = getStoredStorageStats()

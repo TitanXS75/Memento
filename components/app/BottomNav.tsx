@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, FolderPlus, LayoutGrid, Settings, Wifi } from 'lucide-react'
+import { ArrowUpRight, FolderPlus, Images, LayoutGrid, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Logo } from './Logo'
@@ -8,7 +8,7 @@ import { Logo } from './Logo'
 const NAV_ITEMS = [
   { label: 'Home',     path: '/home',     icon: LayoutGrid },
   { label: 'Trips',    path: '/trips',    icon: FolderPlus },
-  { label: 'Nearby',   path: '/nearby',   icon: Wifi },
+  { label: 'Media',    path: '/media',    icon: Images },
   { label: 'Settings', path: '/settings', icon: Settings },
 ] as const
 
@@ -65,7 +65,7 @@ export function Sidebar({ profileInitials, onEditProfile }: {
             >
               <Icon size={18} aria-hidden="true" />
               {label}
-              {label === 'Nearby' && (
+              {label === 'Media' && (
                 <span
                   className="ml-auto size-2 rounded-full bg-[var(--coral)]"
                   aria-hidden="true"

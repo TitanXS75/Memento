@@ -179,13 +179,10 @@ docs/
 
 ---
 
-## Commit Convention
+## Commit Convention & Code Rules
 
-Use conventional commits:
-- `feat(trips): add persistent trip creation with IndexedDB`
-- `fix(nearby): handle discovery timeout`
-- `refactor(ui): extract TripCard into standalone component`
-- `docs: update ARCHITECTURE.md with transport decision`
+1. **Simple commit messages**: Keep commit messages simple and plain (e.g. `add media library and date filter`, `update app icon and permissions`). Do not use `feat:` or `fix:` prefixes.
+2. **Never use `any`**: The `any` keyword is strictly prohibited across the entire TypeScript codebase. Always use explicit types, union types, or `unknown` with type guards.
 
 ---
 

@@ -1,10 +1,13 @@
 'use client'
 
 import { Check, ChevronRight, Moon, Shield, Smartphone, Sun } from 'lucide-react'
+import { useState } from 'react'
+import { ConfirmDialog } from '@/components/app/ConfirmDialog'
 import { useUiStore } from '@/lib/store/ui'
 
 export default function SettingsPage() {
   const { theme, toggleTheme } = useUiStore()
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   return (
     <>
@@ -43,24 +46,14 @@ export default function SettingsPage() {
         </div>
 
         {/* Privacy */}
-        <div className="surface-card divide-y divide-[var(--border)]">
+        <div className="surface-card">
           <p className="eyebrow mb-4">Privacy</p>
-          <div className="flex items-center gap-4 py-4">
+          <div className="flex items-center gap-4">
             <Shield className="text-[var(--accent)]" size={20} aria-hidden="true" />
             <div className="flex-1">
               <p className="text-sm font-medium">No cloud uploads</p>
               <p className="mt-1 text-xs text-[var(--muted)]">
                 Media stays on this device unless you explicitly share it.
-              </p>
-            </div>
-            <Check className="text-[var(--accent)]" size={17} aria-hidden="true" />
-          </div>
-          <div className="flex items-center gap-4 py-4">
-            <Shield className="text-[var(--accent)]" size={20} aria-hidden="true" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">No account required</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                All data lives locally in your browser's IndexedDB.
               </p>
             </div>
             <Check className="text-[var(--accent)]" size={17} aria-hidden="true" />
@@ -94,12 +87,7 @@ export default function SettingsPage() {
             </div>
             <button
               type="button"
-              onClick={() => {
-                try {
-                  localStorage.removeItem('memento-profile')
-                  window.location.href = '/onboarding'
-                } catch {}
-              }}
+              onClick={() => setShowResetConfirm(true)}
               className="secondary-button text-xs"
             >
               Setup Wizard
@@ -109,9 +97,26 @@ export default function SettingsPage() {
 
         {/* Version */}
         <p className="text-center text-[11px] text-[var(--muted)]">
-          Memento — Phase 2 build · Storage: IndexedDB · No backend
+          Memento v0.1.0 · Private Offline Trip Memory Sharing
         </p>
       </div>
+
+      {showResetConfirm && (
+        <ConfirmDialog
+          title="Restart Setup Wizard?"
+          message="This will reset your local profile name and re-open the initial setup wizard to review permissions. Your saved trips and memories will remain intact."
+          confirmLabel="Restart Wizard"
+          cancelLabel="Cancel"
+          destructive={false}
+          onConfirm={() => {
+            try {
+              localStorage.removeItem('memento-profile')
+              window.location.href = '/onboarding'
+            } catch {}
+          }}
+          onCancel={() => setShowResetConfirm(false)}
+        />
+      )}
     </>
   )
 }
