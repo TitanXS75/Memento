@@ -55,21 +55,21 @@ Each approach sacrifices either **privacy**, **quality**, or **convenience**. Me
 | Delete trip with confirmation dialog | P0 | ✅ Done |
 | View trip list with search | P0 | ✅ Done |
 | Trip detail view with metadata | P0 | ✅ Done |
-| Trip cover image from media | P1 | ⏳ Pending |
+| Trip cover image from media | P1 | ✅ Done |
 | Trip status filters (active, archived) | P1 | ⏳ Pending |
 
 ### 3.2 Media Library
 
 | Requirement | Priority | Status |
 |-------------|----------|--------|
-| Browse device photos and videos | P0 | 🔄 In Progress |
-| Filter media by date range | P0 | 🔄 In Progress |
-| Display photos in grid layout | P0 | 🔄 In Progress |
-| Display videos separately from photos | P0 | 🔄 In Progress |
+| Browse device photos and videos | P0 | ✅ Done |
+| Filter media by date range | P0 | ✅ Done |
+| Display photos in grid layout | P0 | ✅ Done |
+| Display videos separately from photos | P0 | ✅ Done |
 | Request and handle storage/media permissions | P0 | ✅ Done |
-| Read EXIF data for date ordering | P1 | ⏳ Pending |
-| Generate thumbnails for performance | P1 | ⏳ Pending |
-| Associate media with trips | P1 | ⏳ Pending |
+| Read EXIF data for date ordering | P1 | ✅ Done |
+| Generate thumbnails for performance | P1 | ✅ Done |
+| Associate media with trips | P1 | ✅ Done |
 
 ### 3.3 Nearby Transfer (Mode A)
 

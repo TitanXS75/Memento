@@ -3,10 +3,16 @@
 import { ArrowLeft, Calendar, Edit2, ImageIcon, Package, Trash2, Video } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { ConfirmDialog } from '@/components/app/ConfirmDialog'
-import { EmptyState } from '@/components/app/EmptyState'
+import { TripMediaGallery } from '@/components/app/TripMediaGallery'
+import type { MediaItem } from '@/lib/db/schema'
+import {
+  getTripMediaItems,
+  removeMediaItem,
+  setTripCoverMedia,
+} from '@/lib/services/media'
 import { useTripsStore } from '@/lib/store/trips'
 import { useUiStore } from '@/lib/store/ui'
 
@@ -37,10 +43,27 @@ export function TripDetailView({ id }: TripDetailViewProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState('')
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
+  const [loadingMedia, setLoadingMedia] = useState(true)
 
   useEffect(() => { loadTrips() }, [loadTrips])
 
   const trip = trips.find((t) => t.id === id)
+
+  const loadMedia = useCallback(async () => {
+    if (!id) return
+    setLoadingMedia(true)
+    try {
+      const items = await getTripMediaItems(id)
+      setMediaItems(items)
+    } finally {
+      setLoadingMedia(false)
+    }
+  }, [id])
+
+  useEffect(() => {
+    loadMedia()
+  }, [loadMedia])
 
   if (!loading && trips.length > 0 && !trip) {
     notFound()
@@ -53,6 +76,9 @@ export function TripDetailView({ id }: TripDetailViewProps) {
       </div>
     )
   }
+
+  const photoCount = mediaItems.filter((m) => m.mediaType === 'photo').length
+  const videoCount = mediaItems.filter((m) => m.mediaType === 'video').length
 
   const handleDelete = async () => {
     await deleteTrip(trip.id)
@@ -68,9 +94,24 @@ export function TripDetailView({ id }: TripDetailViewProps) {
     setEditingName(false)
   }
 
+  const handleSetCover = async (item: MediaItem) => {
+    await setTripCoverMedia(trip.id, item.id)
+    await loadTrips()
+    addToast('Trip cover updated.', 'success')
+  }
+
+  const handleDeleteMedia = async (item: MediaItem) => {
+    await removeMediaItem(item.id)
+    if (trip.coverMediaId === item.id) {
+      await setTripCoverMedia(trip.id, null)
+      await loadTrips()
+    }
+    await loadMedia()
+    addToast('Removed from trip.', 'info')
+  }
+
   return (
     <>
-      {/* Back */}
       <Link
         href="/trips"
         className="inline-flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
@@ -78,7 +119,6 @@ export function TripDetailView({ id }: TripDetailViewProps) {
         <ArrowLeft size={14} aria-hidden="true" /> All trips
       </Link>
 
-      {/* Header */}
       <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           {editingName ? (
@@ -148,43 +188,45 @@ export function TripDetailView({ id }: TripDetailViewProps) {
         </div>
       </div>
 
-      {/* Feature tabs placeholder — Phase 3 will add real media gallery */}
-      <div className="mt-10 grid gap-4 sm:grid-cols-3">
-        <div className="surface-card flex flex-col items-center gap-3 py-8 text-center">
-          <div className="icon-box size-12">
-            <ImageIcon size={22} aria-hidden="true" />
+      {/* Summary KPI Cards */}
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="surface-card flex flex-col items-center gap-2 py-6 text-center">
+          <div className="icon-box size-11">
+            <ImageIcon size={20} aria-hidden="true" />
           </div>
-          <p className="text-sm font-medium">Photos</p>
-          <p className="text-2xl font-normal">0</p>
-          <p className="text-xs text-[var(--muted)]">Media library coming in Phase 3</p>
+          <p className="text-xs font-medium text-[var(--muted)]">Photos</p>
+          <p className="font-sans text-3xl font-normal">{photoCount}</p>
         </div>
-        <div className="surface-card flex flex-col items-center gap-3 py-8 text-center">
-          <div className="icon-box size-12">
-            <Video size={22} aria-hidden="true" />
+        <div className="surface-card flex flex-col items-center gap-2 py-6 text-center">
+          <div className="icon-box size-11">
+            <Video size={20} aria-hidden="true" />
           </div>
-          <p className="text-sm font-medium">Videos</p>
-          <p className="text-2xl font-normal">0</p>
-          <p className="text-xs text-[var(--muted)]">Media library coming in Phase 3</p>
+          <p className="text-xs font-medium text-[var(--muted)]">Videos</p>
+          <p className="font-sans text-3xl font-normal">{videoCount}</p>
         </div>
-        <div className="surface-card flex flex-col items-center gap-3 py-8 text-center">
-          <div className="icon-box size-12">
-            <Package size={22} aria-hidden="true" />
+        <div className="surface-card flex flex-col items-center gap-2 py-6 text-center">
+          <div className="icon-box size-11">
+            <Package size={20} aria-hidden="true" />
           </div>
-          <p className="text-sm font-medium">Export & Share</p>
-          <p className="text-xs text-[var(--muted)]">ZIP export coming in Phase 4</p>
-          <Link href={`/trips/${trip.id}/export`} className="secondary-button text-xs">
-            Open export
+          <p className="text-xs font-medium text-[var(--muted)]">Export & Share</p>
+          <p className="font-sans text-sm font-normal text-[var(--muted)]">{mediaItems.length} items ready</p>
+          <Link href={`/trips/${trip.id}/export`} className="secondary-button mt-1 text-xs">
+            Export ZIP
           </Link>
         </div>
       </div>
 
-      {/* Gallery placeholder */}
+      {/* Real Trip Media Gallery */}
       <div className="mt-10">
-        <p className="eyebrow">Media</p>
-        <h2 className="mt-1 font-sans text-2xl">Gallery</h2>
-        <EmptyState
-          title="No media imported yet"
-          description="Media library access will be available in Phase 3 after Capacitor integration."
+        <p className="eyebrow">Trip Memories</p>
+        <h2 className="mt-1 font-sans text-2xl">Media Gallery</h2>
+        <TripMediaGallery
+          trip={trip}
+          mediaItems={mediaItems}
+          loading={loadingMedia}
+          onRefresh={loadMedia}
+          onSetCover={handleSetCover}
+          onDeleteMedia={handleDeleteMedia}
         />
       </div>
 

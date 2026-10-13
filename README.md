@@ -136,7 +136,7 @@ Memento uses a custom CSS design system with the following tokens:
 |-------|--------|-------------|
 | 1 | ✅ Done | Architecture validation, Capacitor setup, docs |
 | 2 | ✅ Done | UI foundation, navigation, local DB, trip CRUD |
-| 3 | 🔄 In Progress | Media library, thumbnails, date-based browsing |
+| 3 | ✅ Done | Media library, thumbnails, date-based browsing |
 | 4 | ⏳ Pending | ZIP export, archive management, native share sheet |
 | 5 | ⏳ Pending | Nearby transfer (real LAN-based, native plugins) |
 | 6 | ⏳ Pending | Trip sync protocol, device identity, metadata exchange |

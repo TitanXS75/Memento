@@ -35,6 +35,8 @@ export interface MediaItem {
   capturedAt: string
   contentHash: string | null
   localStorageReference: string | null
+  thumbnailUri?: string | null
+  durationSeconds?: number | null
   sourceDeviceId: string | null
   availabilityStatus: 'local' | 'remote_only' | 'unavailable'
   createdAt: string

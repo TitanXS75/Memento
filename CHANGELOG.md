@@ -29,6 +29,14 @@ All notable changes to Memento are documented in this file.
 - ZIP creation service with fflate
 - Storage quota monitoring
 - Unit test setup with Vitest
+- Media library with separate Images and Videos category blocks
+- Date-based media filtering (All, Today, Past 7 days, Past 30 days, Custom date range)
+- Smart photo capture date parsing from EXIF and filename patterns
+- Offscreen canvas thumbnail generation for fast responsive browsing
+- Interactive Trip Media Gallery with date groupings and photo/video filtering
+- Add Media to Trip modal with automatic date range matching
+- Fullscreen Media Lightbox modal with keyboard navigation (Esc, Left/Right arrows)
+- Trip cover photo selection and banner display on trip cards
 
 ### Technical
 
