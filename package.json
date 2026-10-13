@@ -1,11 +1,12 @@
 {
-  "name": "my-project",
+  "name": "memento",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@12.3.4",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cap": "set CAPACITOR_BUILD=true && next build && cap sync",
     "start": "next start",
     "test": "vitest run"
   },
