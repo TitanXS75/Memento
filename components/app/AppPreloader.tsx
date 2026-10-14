@@ -9,8 +9,8 @@ interface AppPreloaderProps {
 }
 
 export function AppPreloader({
-  brandName = 'MEMENTO',
-  minDuration = 1800,
+  brandName = 'Memento',
+  minDuration = 1600,
 }: AppPreloaderProps) {
   const [isVisible, setIsVisible] = useState(true)
   const [isFadingOut, setIsFadingOut] = useState(false)
@@ -24,10 +24,10 @@ export function AppPreloader({
 
       setTimeout(() => {
         setIsFadingOut(true)
-        // After curtain exit transition finishes (1000ms), unmount
+        // Smooth dissolve duration: 800ms
         setTimeout(() => {
           setIsVisible(false)
-        }, 1000)
+        }, 800)
       }, remainingTime)
     }
 
@@ -48,24 +48,47 @@ export function AppPreloader({
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--background)] overflow-hidden px-6 transition-all duration-1000 ease-[cubic-bezier(0.77,0,0.175,1)] ${isFadingOut
-          ? '-translate-y-full opacity-0 pointer-events-none'
-          : 'translate-y-0 opacity-100'
-        }`}
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--background)] px-6 transition-all duration-800 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        isFadingOut
+          ? 'scale-[1.05] opacity-0 blur-[2px] pointer-events-none'
+          : 'scale-100 opacity-100 blur-0'
+      }`}
     >
       <style>{`
-        @keyframes preloader-bar {
-          0% { transform: translateX(-120%); }
-          100% { transform: translateX(380%); }
+        @keyframes pulse-ring {
+          0% { transform: scale(0.92); opacity: 0.35; }
+          50% { transform: scale(1.08); opacity: 0.8; }
+          100% { transform: scale(0.92); opacity: 0.35; }
         }
-        .animate-preloader-bar {
-          animation: preloader-bar 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        @keyframes gentle-rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-pulse-ring {
+          animation: pulse-ring 3.2s ease-in-out infinite;
+        }
+        .animate-gentle-rotate {
+          animation: gentle-rotate 24s linear infinite;
         }
       `}</style>
 
-      {/* Brand Icon Mark */}
-      <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-[var(--accent)] text-white shadow-xl shadow-[var(--accent)]/20">
-        <Logo className="size-8 text-white" />
+      {/* Ambient background memory glow */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="size-80 sm:size-96 rounded-full bg-[var(--accent)]/10 blur-3xl" />
+      </div>
+
+      {/* Central Memory Aperture Emblem */}
+      <div className="relative mb-6 flex items-center justify-center">
+        {/* Outer orbital decorative ring */}
+        <div className="absolute size-24 sm:size-28 rounded-full border border-dashed border-[var(--accent)]/25 animate-gentle-rotate" />
+        
+        {/* Soft breathing halo ring */}
+        <div className="absolute size-20 sm:size-24 rounded-full border border-[var(--accent)]/20 animate-pulse-ring" />
+
+        {/* Brand Core Icon */}
+        <div className="relative flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-[var(--accent)] text-white shadow-xl shadow-[var(--accent)]/25 transition-transform duration-500 hover:scale-105">
+          <Logo className="size-7 sm:size-8 text-white" />
+        </div>
       </div>
 
       {/* Brand Title - Same font-sans as inside the app */}
@@ -73,13 +96,15 @@ export function AppPreloader({
         {brandName}
       </h1>
 
-      <p className="eyebrow mt-2.5 text-[10px] tracking-[0.2em] text-[var(--muted)]">
+      <p className="eyebrow mt-2 text-[10px] sm:text-xs tracking-[0.22em] text-[var(--muted)]">
         Private Offline Memories
       </p>
 
-      {/* Minimalist 1.5px Track with Smooth Gliding Line */}
-      <div className="mt-8 w-44 sm:w-60 h-[1.5px] bg-[var(--accent)]/15 overflow-hidden relative rounded-full">
-        <div className="absolute top-0 left-0 h-full w-1/3 bg-[var(--accent)] animate-preloader-bar rounded-full" />
+      {/* Subtle Breathing Memory Indicator Dots */}
+      <div className="mt-8 flex items-center gap-2">
+        <span className="size-1.5 rounded-full bg-[var(--accent)]/40 animate-pulse [animation-delay:0ms]" />
+        <span className="size-1.5 rounded-full bg-[var(--accent)]/80 animate-pulse [animation-delay:300ms]" />
+        <span className="size-1.5 rounded-full bg-[var(--accent)] animate-pulse [animation-delay:600ms]" />
       </div>
     </div>
   )

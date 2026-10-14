@@ -8,8 +8,8 @@ import { useShallow } from 'zustand/react/shallow'
 import { ExportStepDateMedia } from '@/components/app/ExportStepDateMedia'
 import { ExportStepReview } from '@/components/app/ExportStepReview'
 import type { MediaItem } from '@/lib/db/schema'
-import { getTripMediaItems } from '@/lib/services/media'
-import { buildArchiveFilename, createZipArchive, fetchMediaBytes, type ExportManifest, type ZipExportItem } from '@/lib/services/zip'
+import { getTripMediaItems, readDeviceMediaBytes } from '@/lib/services/media'
+import { buildArchiveFilename, createZipArchive, type ExportManifest, type ZipExportItem } from '@/lib/services/zip'
 import { useArchivesStore } from '@/lib/store/archives'
 import { useTripsStore } from '@/lib/store/trips'
 import { useUiStore } from '@/lib/store/ui'
@@ -117,8 +117,11 @@ export function TripExportView({ id }: TripExportViewProps) {
         const item = exportableItems[i]
         if (!item) continue
         setStatusMessage(`Reading item ${i + 1} of ${exportableItems.length}…`)
-        const src = item.localStorageReference || item.thumbnailUri || ''
-        const data = await fetchMediaBytes(src)
+        const data = await readDeviceMediaBytes({
+          uri: item.localStorageReference || item.thumbnailUri || '',
+          name: item.filename,
+          thumbnail: item.thumbnailUri || undefined,
+        })
         zipItems.push({
           mediaItemId: item.id,
           fileName: item.filename,

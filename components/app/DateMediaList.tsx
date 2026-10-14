@@ -211,7 +211,7 @@ export function DateMediaList({
                     >
                       <Package size={15} className="text-[var(--accent)] shrink-0" />
                       <div>
-                        <span>Make ZIP / Convert</span>
+                        <span>Compress to ZIP</span>
                         <p className="text-[10px] text-[var(--muted)]">Package items from this date</p>
                       </div>
                     </button>

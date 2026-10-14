@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, ChevronRight, Moon, RefreshCw, Shield, Smartphone, Sparkles, Sun } from 'lucide-react'
+import { Check, Moon, RefreshCw, Shield, Smartphone, Sparkles, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConfirmDialog } from '@/components/app/ConfirmDialog'
 import { useUiStore } from '@/lib/store/ui'
@@ -113,7 +113,6 @@ export default function SettingsPage() {
                 Android and iOS support via Capacitor.
               </p>
             </div>
-            <ChevronRight className="text-[var(--muted)]" size={17} aria-hidden="true" />
           </div>
         </div>
 

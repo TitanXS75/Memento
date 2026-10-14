@@ -13,10 +13,10 @@ import {
   Video,
   X,
 } from 'lucide-react'
-import type { DeviceMediaItem } from '@/lib/services/media'
+import { readDeviceMediaBytes, type DeviceMediaItem } from '@/lib/services/media'
 import { formatBytes } from '@/lib/services/hash'
-import { createZipArchive, fetchMediaBytes, type ExportManifest, type ZipExportItem } from '@/lib/services/zip'
-import { shareOrDownloadFile } from '@/lib/services/share'
+import { createZipArchive, type ExportManifest, type ZipExportItem } from '@/lib/services/zip'
+import { saveZipToDevice, shareOrDownloadFile } from '@/lib/services/share'
 import { useArchivesStore } from '@/lib/store/archives'
 import { useUiStore } from '@/lib/store/ui'
 
@@ -141,15 +141,15 @@ export function DateZipModal({
         if (abortController.signal.aborted) throw new Error('Cancelled')
         const item = targetItems[i]
         if (!item) continue
-        setStatusText(`Reading file ${i + 1} of ${targetItems.length}…`)
-        const src = item.uri || item.thumbnail || ''
-        const data = await fetchMediaBytes(src)
+        setStatusText(`Reading file ${i + 1} of ${targetItems.length} (${item.name || 'item'})…`)
+        const data = await readDeviceMediaBytes(item)
         zipItems.push({
           mediaItemId: item.id,
           fileName: item.name || `media_${i + 1}.${item.type === 'video' ? 'mp4' : 'jpg'}`,
           date: dateKey,
           data,
         })
+        setProgress(Math.round(((i + 1) / targetItems.length) * 45))
       }
 
       setStatusText('Compressing into original quality ZIP…')
@@ -162,7 +162,7 @@ export function DateZipModal({
 
       const zipBytes = await createZipArchive(
         manifest,
-        (pct) => setProgress(pct),
+        (pct) => setProgress(45 + Math.round((pct / 100) * 55)),
         abortController.signal
       )
 
@@ -178,14 +178,15 @@ export function DateZipModal({
       setReadyBlob(blob)
       setStep('ready')
       addToast('ZIP archive created successfully!', 'success')
-    } catch {
+    } catch (err: unknown) {
       if (recordId) {
         await updateArchive(recordId, { status: 'failed' }).catch(() => {})
       }
       if (abortController.signal.aborted) {
         addToast('ZIP creation cancelled.', 'info')
       } else {
-        addToast('Failed to create ZIP archive.', 'error')
+        const errorMsg = err instanceof Error ? err.message : 'Failed to create ZIP archive.'
+        addToast(errorMsg, 'error')
       }
       setStep('select')
     }
@@ -206,17 +207,17 @@ export function DateZipModal({
     }
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!readyBlob) return
-    const url = URL.createObjectURL(readyBlob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = archiveFilename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 10000)
-    addToast('ZIP download started.', 'success')
+    try {
+      const success = await saveZipToDevice(readyBlob, archiveFilename)
+      if (success) {
+        addToast('ZIP archive saved to device.', 'success')
+      }
+    } catch (err) {
+      console.error('Download error:', err)
+      addToast('Failed to save ZIP.', 'error')
+    }
   }
 
   const handleCancelPacking = () => {
@@ -410,7 +411,7 @@ export function DateZipModal({
                 className="primary-button flex-1 justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Package size={16} />
-                <span>Make ZIP ({targetItems.length})</span>
+                <span>Compress to ZIP ({targetItems.length})</span>
               </button>
             </div>
           </div>

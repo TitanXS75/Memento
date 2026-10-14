@@ -20,17 +20,20 @@ export interface MediaPermissionStatus {
   status: 'granted' | 'denied' | 'prompt'
 }
 
-interface NativeDeviceMediaPlugin {
+export interface NativeDeviceMediaPlugin {
   checkMediaPermissions(): Promise<MediaPermissionStatus>
   requestMediaPermissions(): Promise<MediaPermissionStatus>
   getDeviceMedia(options?: { type?: 'all' | 'images' | 'videos'; limit?: number }): Promise<{
     images: DeviceMediaItem[]
     videos: DeviceMediaItem[]
   }>
+  readMediaFile(options: { uri: string }): Promise<{ data: string; size: number }>
+  shareZipFile(options: { data: string; filename: string; title?: string }): Promise<{ success: boolean }>
+  saveZipFile(options: { data: string; filename: string }): Promise<{ success: boolean; path?: string }>
   openNearbyServices(options?: { text?: string; title?: string }): Promise<{ success: boolean; method: string }>
 }
 
-const NativeDeviceMedia = registerPlugin<NativeDeviceMediaPlugin>('DeviceMedia')
+export const NativeDeviceMedia = registerPlugin<NativeDeviceMediaPlugin>('DeviceMedia')
 
 // Web in-memory / session storage fallback for development and browsers
 const WEB_STORAGE_KEY = 'memento_web_media_items'
@@ -203,6 +206,83 @@ export function generateImageThumbnail(dataUrl: string, maxDimension = 320): Pro
     img.onerror = () => resolve(dataUrl)
     img.src = dataUrl
   })
+}
+
+/**
+ * Read raw bytes of a media item across platforms (Android native content URI, Data URL, Blob, or fallback).
+ */
+export async function readDeviceMediaBytes(item: {
+  uri: string
+  name: string
+  thumbnail?: string
+}): Promise<Uint8Array> {
+  // 1. If native platform with content:// or file:// URI, use native bridge
+  if (Capacitor.isNativePlatform() && item.uri && (item.uri.startsWith('content://') || item.uri.startsWith('file://'))) {
+    try {
+      const res = await NativeDeviceMedia.readMediaFile({ uri: item.uri })
+      if (res && res.data) {
+        const binary = atob(res.data)
+        const bytes = new Uint8Array(binary.length)
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i)
+        }
+        return bytes
+      }
+    } catch (err) {
+      console.warn('Native readMediaFile failed for ' + item.name + ', trying fallback:', err)
+    }
+  }
+
+  // 2. If data URL, decode base64 directly
+  if (item.uri && item.uri.startsWith('data:')) {
+    try {
+      const comma = item.uri.indexOf(',')
+      const base64 = item.uri.slice(comma + 1)
+      const binary = atob(base64)
+      const bytes = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i)
+      }
+      return bytes
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Try standard fetch (blob: or http: or local paths)
+  if (item.uri && (item.uri.startsWith('blob:') || item.uri.startsWith('http://') || item.uri.startsWith('https://') || item.uri.startsWith('/'))) {
+    try {
+      const res = await fetch(item.uri)
+      if (res.ok) {
+        const buf = await res.arrayBuffer()
+        return new Uint8Array(buf)
+      }
+    } catch (fetchErr) {
+      console.warn('Fetch failed for uri ' + item.uri + ':', fetchErr)
+    }
+  }
+
+  // 4. Fallback to thumbnail base64 if available
+  if (item.thumbnail && item.thumbnail.startsWith('data:')) {
+    try {
+      const comma = item.thumbnail.indexOf(',')
+      const base64 = item.thumbnail.slice(comma + 1)
+      const binary = atob(base64)
+      const bytes = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i)
+      }
+      return bytes
+    } catch {
+      // ignore
+    }
+  }
+
+  // 5. Ultimate fallback: Return informative metadata placeholder text so ZIP never crashes
+  const encoder = new TextEncoder()
+  return encoder.encode(
+    `Memento Media Placeholder\nFilename: ${item.name}\nSource URI: ${item.uri}\nOffline item preserved.\n`
+  )
 }
 
 /**

@@ -15,6 +15,7 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Size;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Logger;
@@ -25,6 +26,10 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import android.os.Environment;
 
 @CapacitorPlugin(
     name = "DeviceMedia",
@@ -306,6 +311,119 @@ public class DeviceMediaPlugin extends Plugin {
             } catch (Throwable chooserEx) {
                 call.reject("Could not launch nearby services: " + chooserEx.getMessage());
             }
+        }
+    }
+
+    @PluginMethod
+    public void readMediaFile(PluginCall call) {
+        String uriStr = call.getString("uri");
+        if (uriStr == null || uriStr.isEmpty()) {
+            call.reject("URI is required");
+            return;
+        }
+
+        try {
+            Uri uri = Uri.parse(uriStr);
+            ContentResolver resolver = getContext().getContentResolver();
+            try (InputStream is = resolver.openInputStream(uri)) {
+                if (is == null) {
+                    call.reject("Could not open media stream");
+                    return;
+                }
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                byte[] temp = new byte[32768];
+                int read;
+                while ((read = is.read(temp, 0, temp.length)) != -1) {
+                    buffer.write(temp, 0, read);
+                }
+                buffer.flush();
+                byte[] fileBytes = buffer.toByteArray();
+                String base64 = Base64.encodeToString(fileBytes, Base64.NO_WRAP);
+                JSObject result = new JSObject();
+                result.put("data", base64);
+                result.put("size", fileBytes.length);
+                call.resolve(result);
+            }
+        } catch (Exception e) {
+            Logger.error("DeviceMediaPlugin readMediaFile failed for " + uriStr, e);
+            call.reject("Failed reading media file: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void shareZipFile(PluginCall call) {
+        String base64Data = call.getString("data");
+        String filename = call.getString("filename", "memento_archive.zip");
+        String title = call.getString("title", "Share Archive");
+
+        if (base64Data == null || base64Data.isEmpty()) {
+            call.reject("Data is required");
+            return;
+        }
+
+        try {
+            byte[] zipBytes = Base64.decode(base64Data, Base64.NO_WRAP);
+            Context ctx = getContext();
+            File cacheDir = new File(ctx.getCacheDir(), "archives");
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs();
+            }
+            File zipFile = new File(cacheDir, filename);
+            try (FileOutputStream fos = new FileOutputStream(zipFile)) {
+                fos.write(zipBytes);
+                fos.flush();
+            }
+
+            Uri contentUri = FileProvider.getUriForFile(
+                ctx,
+                ctx.getPackageName() + ".fileprovider",
+                zipFile
+            );
+
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("application/zip");
+            sendIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT, title);
+            sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            sendIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            Intent chooser = Intent.createChooser(sendIntent, title);
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ctx.startActivity(chooser);
+
+            JSObject res = new JSObject();
+            res.put("success", true);
+            call.resolve(res);
+        } catch (Exception e) {
+            Logger.error("DeviceMediaPlugin shareZipFile failed", e);
+            call.reject("Failed sharing zip: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void saveZipFile(PluginCall call) {
+        String base64Data = call.getString("data");
+        String filename = call.getString("filename", "memento_archive.zip");
+        if (base64Data == null || base64Data.isEmpty()) {
+            call.reject("Data is required");
+            return;
+        }
+
+        try {
+            byte[] zipBytes = Base64.decode(base64Data, Base64.NO_WRAP);
+            File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File target = new File(downloadsDir, filename);
+            try (FileOutputStream fos = new FileOutputStream(target)) {
+                fos.write(zipBytes);
+                fos.flush();
+            }
+            JSObject res = new JSObject();
+            res.put("success", true);
+            res.put("path", target.getAbsolutePath());
+            call.resolve(res);
+        } catch (Exception e) {
+            Logger.error("DeviceMediaPlugin saveZipFile failed", e);
+            call.reject("Failed saving zip: " + e.getMessage());
         }
     }
 }
