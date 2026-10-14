@@ -48,6 +48,17 @@ function formatMonthShort(dateKey: string): string {
   return targetDate.toLocaleDateString([], { month: 'short' }).toUpperCase()
 }
 
+function formatWeekday(dateKey: string): string {
+  try {
+    const [y, m, d] = dateKey.split('-').map(Number)
+    if (!y || !m || !d) return ''
+    const targetDate = new Date(y, m - 1, d)
+    return targetDate.toLocaleDateString([], { weekday: 'long' })
+  } catch {
+    return ''
+  }
+}
+
 function formatDuration(ms?: number): string {
   if (!ms || ms <= 0) return '0:00'
   const totalSeconds = Math.floor(ms / 1000)
@@ -160,17 +171,12 @@ export function DateMediaList({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-sans text-xl font-normal text-[var(--foreground)] truncate">
-                      {group.shortDate}
-                    </p>
-                    {group.headerLabel !== group.shortDate && (
-                      <span className="rounded-full bg-[var(--accent-soft)]/70 px-2 py-0.5 text-[10px] font-medium text-[var(--accent)]">
-                        {group.headerLabel}
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-[var(--accent-soft)]/80 px-2.5 py-0.5 text-xs font-semibold text-[var(--accent)]">
+                      {formatWeekday(group.dateKey)}
+                    </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-[var(--muted)] truncate">
+                  <p className="mt-1 text-xs text-[var(--muted)] truncate">
                     {group.items.length} {group.items.length === 1 ? 'item' : 'items'} ·{' '}
                     {group.photos.length} photos, {group.videos.length} videos ·{' '}
                     {formatBytes(group.totalBytes)}
