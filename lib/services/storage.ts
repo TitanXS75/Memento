@@ -97,6 +97,16 @@ export async function requestStorageAndMediaPermissions(): Promise<{
   let storagePermission: 'granted' | 'prompt' | 'denied' = 'granted'
   let mediaPermission: 'granted' | 'prompt' | 'denied' = 'granted'
 
+  // 1. Request native/web photo & video permission (Triggers OS permission popup on Android/iOS)
+  try {
+    const { requestMediaPermission } = await import('@/lib/services/media')
+    const mediaRes = await requestMediaPermission()
+    mediaPermission = mediaRes.granted ? 'granted' : 'denied'
+  } catch (err) {
+    console.warn('Native requestMediaPermission failed:', err)
+  }
+
+  // 2. Request persistent storage from browser sandbox
   if (typeof navigator !== 'undefined' && navigator.storage?.persist) {
     try {
       const isPersisted = await navigator.storage.persist()

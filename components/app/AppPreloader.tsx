@@ -10,7 +10,7 @@ interface AppPreloaderProps {
 
 export function AppPreloader({
   brandName = 'Memento',
-  minDuration = 1600,
+  minDuration = 1400,
 }: AppPreloaderProps) {
   const [isVisible, setIsVisible] = useState(true)
   const [isFadingOut, setIsFadingOut] = useState(false)
@@ -24,10 +24,10 @@ export function AppPreloader({
 
       setTimeout(() => {
         setIsFadingOut(true)
-        // Smooth dissolve duration: 800ms
+        // Smooth fade out duration: 600ms
         setTimeout(() => {
           setIsVisible(false)
-        }, 800)
+        }, 600)
       }, remainingTime)
     }
 
@@ -48,47 +48,15 @@ export function AppPreloader({
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--background)] px-6 transition-all duration-800 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--background)] px-6 transition-all duration-600 ease-out ${
         isFadingOut
-          ? 'scale-[1.05] opacity-0 blur-[2px] pointer-events-none'
-          : 'scale-100 opacity-100 blur-0'
+          ? 'opacity-0 pointer-events-none'
+          : 'opacity-100'
       }`}
     >
-      <style>{`
-        @keyframes pulse-ring {
-          0% { transform: scale(0.92); opacity: 0.35; }
-          50% { transform: scale(1.08); opacity: 0.8; }
-          100% { transform: scale(0.92); opacity: 0.35; }
-        }
-        @keyframes gentle-rotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-pulse-ring {
-          animation: pulse-ring 3.2s ease-in-out infinite;
-        }
-        .animate-gentle-rotate {
-          animation: gentle-rotate 24s linear infinite;
-        }
-      `}</style>
-
-      {/* Ambient background memory glow */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="size-80 sm:size-96 rounded-full bg-sky-400/15 blur-3xl" />
-      </div>
-
-      {/* Central Memory Aperture Emblem */}
-      <div className="relative mb-6 flex items-center justify-center">
-        {/* Outer orbital decorative ring */}
-        <div className="absolute size-24 sm:size-28 rounded-full border border-dashed border-sky-400/30 animate-gentle-rotate" />
-        
-        {/* Soft breathing halo ring */}
-        <div className="absolute size-20 sm:size-24 rounded-full border border-sky-400/25 animate-pulse-ring" />
-
-        {/* Brand Core Icon - Sky blue background */}
-        <div className="relative flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-sky-400 text-white shadow-xl shadow-sky-400/35 transition-transform duration-500 hover:scale-105">
-          <Logo className="size-7 sm:size-8 text-white" />
-        </div>
+      {/* Brand Icon Mark - Theme purple background */}
+      <div className="mb-5 flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20 transition-transform duration-300">
+        <Logo className="size-7 sm:size-8 text-white" />
       </div>
 
       {/* Brand Title - Same font-sans as inside the app */}
@@ -100,11 +68,11 @@ export function AppPreloader({
         Private Offline Memories
       </p>
 
-      {/* Subtle Breathing Memory Indicator Dots */}
-      <div className="mt-8 flex items-center gap-2">
-        <span className="size-1.5 rounded-full bg-sky-400/40 animate-pulse [animation-delay:0ms]" />
-        <span className="size-1.5 rounded-full bg-sky-400/80 animate-pulse [animation-delay:300ms]" />
-        <span className="size-1.5 rounded-full bg-sky-400 animate-pulse [animation-delay:600ms]" />
+      {/* Subtle Breathing Theme Indicator Dots */}
+      <div className="mt-7 flex items-center gap-1.5">
+        <span className="size-1.5 rounded-full bg-[var(--accent)]/30 animate-pulse [animation-delay:0ms]" />
+        <span className="size-1.5 rounded-full bg-[var(--accent)]/60 animate-pulse [animation-delay:200ms]" />
+        <span className="size-1.5 rounded-full bg-[var(--accent)] animate-pulse [animation-delay:400ms]" />
       </div>
     </div>
   )

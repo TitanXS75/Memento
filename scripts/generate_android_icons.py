@@ -2,7 +2,7 @@ import os
 import math
 from PIL import Image, ImageDraw
 
-def render_memento_logo(size, is_foreground_only=False, is_round=False, bg_color='#38BDF8'):
+def render_memento_logo(size, is_foreground_only=False, is_round=False, bg_color='#4B3F72'):
     # Render at 4x supersampling for ultra smooth antialiased curves
     scale = 4
     canvas_size = size * scale
@@ -62,47 +62,45 @@ def render_memento_logo(size, is_foreground_only=False, is_round=False, bg_color
         width=max(stroke_w // 2, 1)
     )
 
-    # Cute face elements inside chassis (color: #4B3F72)
-    face_color = '#4B3F72'
-    eye_stroke = max(int(stroke_w * 0.9), 2)
+    # Camera lens elements inside chassis (color: #4B3F72)
+    lens_color = '#4B3F72'
+    lens_stroke = max(int(stroke_w * 1.1), 3)
 
-    # Left eye: ^ shape
-    # SVG: M7.5 15.5 L9.5 12.8 L11.5 15.5
-    # Normalize coords in chassis [0..25, 0..18.5]
-    def to_canvas(cx, cy):
-        rx = (cx - 3.5) / 25.0
-        ry = (cy - 7.5) / 18.5
-        return (cam_left + rx * cam_w, cam_top + ry * cam_h)
+    lens_cx = cam_left + cam_w / 2.0
+    lens_cy = cam_top + cam_h / 2.0
+    outer_r = cam_w * (5.25 / 25.0)
+    inner_r = cam_w * (2.6 / 25.0)
 
-    p1 = to_canvas(7.5, 15.5)
-    p2 = to_canvas(9.5, 12.8)
-    p3 = to_canvas(11.5, 15.5)
-    draw.line([p1, p2, p3], fill=face_color, width=eye_stroke, joint='round')
+    # Outer lens ring
+    draw.ellipse(
+        [lens_cx - outer_r, lens_cy - outer_r, lens_cx + outer_r, lens_cy + outer_r],
+        outline=lens_color,
+        width=lens_stroke
+    )
 
-    # Right eye: ^ shape
-    # SVG: M20.5 15.5 L22.5 12.8 L24.5 15.5
-    p4 = to_canvas(20.5, 15.5)
-    p5 = to_canvas(22.5, 12.8)
-    p6 = to_canvas(24.5, 15.5)
-    draw.line([p4, p5, p6], fill=face_color, width=eye_stroke, joint='round')
+    # Inner lens core circle
+    draw.ellipse(
+        [lens_cx - inner_r, lens_cy - inner_r, lens_cx + inner_r, lens_cy + inner_r],
+        fill=lens_color
+    )
 
-    # Smile mouth: ‿ curve
-    # SVG: M13.5 19.2 Q16 22.2 18.5 19.2
-    # Quadratic bezier curve
-    sp1 = to_canvas(13.5, 18.8)
-    ctrl = to_canvas(16.0, 22.2)
-    sp2 = to_canvas(18.5, 18.8)
+    # Viewfinder dot (top-right of chassis)
+    vf_r = max(int(cam_w * (1.2 / 25.0)), 3)
+    vf_x = cam_left + cam_w * (20.5 / 25.0)
+    vf_y = cam_top + cam_h * (4.2 / 18.5)
+    draw.ellipse(
+        [vf_x - vf_r, vf_y - vf_r, vf_x + vf_r, vf_y + vf_r],
+        fill=lens_color
+    )
 
-    smile_points = []
-    steps = 30
-    for i in range(steps + 1):
-        t = i / steps
-        # B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
-        bx = (1 - t)**2 * sp1[0] + 2 * (1 - t) * t * ctrl[0] + t**2 * sp2[0]
-        by = (1 - t)**2 * sp1[1] + 2 * (1 - t) * t * ctrl[1] + t**2 * sp2[1]
-        smile_points.append((bx, by))
-
-    draw.line(smile_points, fill=face_color, width=eye_stroke, joint='round')
+    # Small lens reflection highlight
+    glint_r = max(int(inner_r * 0.32), 2)
+    glint_x = lens_cx + inner_r * 0.4
+    glint_y = lens_cy - inner_r * 0.4
+    draw.ellipse(
+        [glint_x - glint_r, glint_y - glint_r, glint_x + glint_r, glint_y + glint_r],
+        fill='#FFFFFF'
+    )
 
     # Downsample using high quality Lanczos filter
     final_img = img.resize((size, size), Image.Resampling.LANCZOS)
@@ -115,7 +113,7 @@ def render_splash(width, height):
 
     # Center icon
     icon_size = min(int(min(width, height) * 0.38), 240)
-    icon_img = render_memento_logo(icon_size, is_foreground_only=False, is_round=False, bg_color='#38BDF8')
+    icon_img = render_memento_logo(icon_size, is_foreground_only=False, is_round=False, bg_color='#4B3F72')
 
     offset_x = (width - icon_size) // 2
     offset_y = (height - icon_size) // 2 - int(icon_size * 0.1)

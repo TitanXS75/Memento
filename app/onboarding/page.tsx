@@ -44,15 +44,13 @@ export default function OnboardingPage() {
 
   const handleGrantAndCalculate = async () => {
     setIsCalculating(true)
-    setCalcStatusText('Analyzing browser sandbox & permissions…')
+    setCalcStatusText('Requesting media & storage access…')
 
     try {
       await requestStorageAndMediaPermissions()
-      setCalcStatusText('Querying allocated storage quota…')
-      await new Promise((r) => setTimeout(r, 600))
-
+      setCalcStatusText('Calculating device media storage…')
       await calculateStorageStats()
-      setCalcStatusText('Storage analyzed successfully.')
+      setCalcStatusText('Storage calculated successfully.')
       await new Promise((r) => setTimeout(r, 400))
       setStep('ready')
     } catch (err) {

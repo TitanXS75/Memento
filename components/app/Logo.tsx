@@ -2,14 +2,12 @@ import type { SVGProps } from 'react'
 
 interface LogoProps extends SVGProps<SVGSVGElement> {
   frameColor?: string
-  faceColor?: string
   buttonColor?: string
 }
 
 export function Logo({
   className = 'size-6',
   frameColor = 'currentColor',
-  faceColor = 'currentColor',
   buttonColor = '#ef4444',
   ...props
 }: LogoProps) {
@@ -43,30 +41,38 @@ export function Logo({
         strokeWidth="1.8"
       />
 
-      {/* Left eye (^) */}
-      <path
-        d="M7.5 15.5L9.5 12.8L11.5 15.5"
-        stroke={faceColor}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      {/* Viewfinder dot (top-right) */}
+      <circle
+        cx="23.5"
+        cy="11.5"
+        r="1.2"
+        fill={frameColor}
       />
 
-      {/* Smile mouth (‿) placed below */}
-      <path
-        d="M13.5 19.2Q16 22.2 18.5 19.2"
-        stroke={faceColor}
+      {/* Outer camera lens ring */}
+      <circle
+        cx="16"
+        cy="16.75"
+        r="5.25"
+        stroke={frameColor}
         strokeWidth="1.8"
-        strokeLinecap="round"
       />
 
-      {/* Right eye (^) */}
-      <path
-        d="M20.5 15.5L22.5 12.8L24.5 15.5"
-        stroke={faceColor}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      {/* Inner camera lens core */}
+      <circle
+        cx="16"
+        cy="16.75"
+        r="2.5"
+        fill={frameColor}
+      />
+
+      {/* Subtle lens reflection highlight */}
+      <circle
+        cx="17.2"
+        cy="15.5"
+        r="0.75"
+        fill="currentColor"
+        className="opacity-40"
       />
     </svg>
   )

@@ -1,33 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <!-- Shutter release button (red) -->
-  <rect x="7" y="5" width="4.5" height="2" rx="1" fill="#ef4444" />
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Camera Shutter button (red) -->
+  <rect x="42" y="30" width="24" height="11" rx="5" fill="#ef4444" />
 
   <!-- Camera chassis -->
-  <rect x="3.5" y="7.5" width="25" height="18.5" rx="4.5" stroke="#191827" stroke-width="1.8" />
+  <rect x="22" y="44" width="136" height="102" rx="25" stroke="#191827" stroke-width="10" />
 
-  <!-- Left eye (^) -->
-  <path
-    d="M7.5 15.5L9.5 12.8L11.5 15.5"
-    stroke="#191827"
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <!-- Viewfinder dot -->
+  <circle cx="130" cy="65" r="6" fill="#191827" />
 
-  <!-- Smile mouth (‿) placed below -->
-  <path
-    d="M13.5 19.2Q16 22.2 18.5 19.2"
-    stroke="#191827"
-    stroke-width="1.8"
-    stroke-linecap="round"
-  />
+  <!-- Outer camera lens ring -->
+  <circle cx="90" cy="95" r="28" stroke="#191827" stroke-width="10" />
 
-  <!-- Right eye (^) -->
-  <path
-    d="M20.5 15.5L22.5 12.8L24.5 15.5"
-    stroke="#191827"
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <!-- Inner camera lens core -->
+  <circle cx="90" cy="95" r="14" fill="#191827" />
+
+  <!-- Lens reflection highlight -->
+  <circle cx="96" cy="89" r="4" fill="#ffffff" opacity="0.7" />
 </svg>

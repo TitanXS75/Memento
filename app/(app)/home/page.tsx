@@ -41,7 +41,7 @@ export default function HomePage() {
   const activeTrips = useMemo(() => trips.filter((t) => !t.archivedAt), [trips])
 
   const [showCreate, setShowCreate] = useState(false)
-  const [storageStats, setStorageStats] = useState<StorageStats | null>(null)
+  const [storageStats, setStorageStats] = useState<StorageStats | null>(() => getStoredStorageStats())
   const [isRefreshingStorage, setIsRefreshingStorage] = useState(false)
   const [clock, setClock] = useState<Date | null>(null)
 
@@ -60,9 +60,7 @@ export default function HomePage() {
     setClock(new Date())
     const timer = setInterval(() => setClock(new Date()), 1000)
 
-    // Load initial cached stats then calculate live
-    const cached = getStoredStorageStats()
-    if (cached) setStorageStats(cached)
+    // Calculate live immediately after getting access
     calculateStorageStats().then(setStorageStats).catch(() => {})
 
     return () => clearInterval(timer)
@@ -175,7 +173,7 @@ export default function HomePage() {
               <div>
                 <p className="eyebrow">Device Media Storage</p>
                 <p className="mt-2 font-sans text-4xl">
-                  {storageStats ? formatBytes(storageStats.mediaBytes) : '0 B'}
+                  {storageStats ? formatBytes(storageStats.mediaBytes) : 'Calculating…'}
                 </p>
               </div>
               <div className="flex items-center gap-2">

@@ -5,29 +5,15 @@
   <!-- Camera chassis -->
   <rect x="22" y="44" width="136" height="102" rx="25" stroke="#191827" stroke-width="10" />
 
-  <!-- Left eye (^) -->
-  <path
-    d="M42 88L54 73L66 88"
-    stroke="#191827"
-    stroke-width="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <!-- Viewfinder dot -->
+  <circle cx="130" cy="65" r="6" fill="#191827" />
 
-  <!-- Smile mouth (‿) placed lower down -->
-  <path
-    d="M76 109Q90 126 104 109"
-    stroke="#191827"
-    stroke-width="10"
-    stroke-linecap="round"
-  />
+  <!-- Outer camera lens ring -->
+  <circle cx="90" cy="95" r="28" stroke="#191827" stroke-width="10" />
 
-  <!-- Right eye (^) -->
-  <path
-    d="M114 88L126 73L138 88"
-    stroke="#191827"
-    stroke-width="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <!-- Inner camera lens core -->
+  <circle cx="90" cy="95" r="14" fill="#191827" />
+
+  <!-- Lens reflection highlight -->
+  <circle cx="96" cy="89" r="4" fill="#ffffff" opacity="0.7" />
 </svg>
