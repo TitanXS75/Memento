@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core'
 import { getDb } from '@/lib/db'
 import type { MediaItem } from '@/lib/db/schema'

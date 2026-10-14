@@ -1,55 +1,13 @@
 'use client'
 
-import { Check, Moon, RefreshCw, Shield, Smartphone, Sparkles, Sun } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Check, Moon, Shield, Smartphone, Sun } from 'lucide-react'
+import { useState } from 'react'
 import { ConfirmDialog } from '@/components/app/ConfirmDialog'
 import { useUiStore } from '@/lib/store/ui'
-import {
-  APP_VERSION,
-  applyAppUpdate,
-  checkForAppUpdate,
-  isAutoUpdateEnabled,
-  setAutoUpdateEnabled,
-} from '@/lib/services/update'
 
 export default function SettingsPage() {
   const { theme, toggleTheme, addToast } = useUiStore()
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const [autoUpdate, setAutoUpdate] = useState(false)
-  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
-  const [updateStatus, setUpdateStatus] = useState<string | null>(null)
-
-  useEffect(() => {
-    setMounted(true)
-    setAutoUpdate(isAutoUpdateEnabled())
-  }, [])
-
-  const handleToggleAutoUpdate = () => {
-    const next = !autoUpdate
-    setAutoUpdate(next)
-    setAutoUpdateEnabled(next)
-    addToast(next ? 'Auto-update enabled' : 'Auto-update disabled', 'info')
-  }
-
-  const handleManualCheckUpdate = async () => {
-    setIsCheckingUpdate(true)
-    setUpdateStatus(null)
-    try {
-      const res = await checkForAppUpdate()
-      if (res.hasUpdate) {
-        setUpdateStatus('New update available!')
-        addToast('New update found! Click Update to apply.', 'success')
-      } else {
-        setUpdateStatus('Your app is up to date.')
-        addToast('Memento is up to date.', 'info')
-      }
-    } catch {
-      setUpdateStatus('Could not reach update server.')
-    } finally {
-      setIsCheckingUpdate(false)
-    }
-  }
 
   return (
     <>
@@ -136,64 +94,9 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* App Updates & Auto-update */}
-        <div className="surface-card">
-          <p className="eyebrow mb-4">App Updates</p>
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-medium">Version {APP_VERSION}</p>
-                <p className="mt-0.5 text-xs text-[var(--muted)]">
-                  {updateStatus ?? 'Checks for latest features whenever opened.'}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {updateStatus === 'New update available!' && (
-                  <button
-                    type="button"
-                    onClick={() => applyAppUpdate()}
-                    className="primary-button text-xs py-1.5 px-3"
-                  >
-                    <Sparkles size={13} />
-                    <span>Update now</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleManualCheckUpdate}
-                  disabled={isCheckingUpdate}
-                  className="secondary-button shrink-0 self-start sm:self-auto text-xs"
-                >
-                  <RefreshCw size={13} className={isCheckingUpdate ? 'animate-spin text-[var(--accent)]' : ''} />
-                  <span>{isCheckingUpdate ? 'Checking…' : 'Check for updates'}</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-[var(--border)] pt-3">
-              <div>
-                <p className="text-sm font-medium">Automatic updates</p>
-                <p className="mt-0.5 text-xs text-[var(--muted)]">
-                  Promptless silent update when a new version is pushed.
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={mounted ? autoUpdate : false}
-                aria-label="Toggle auto-update"
-                onClick={handleToggleAutoUpdate}
-                className={`toggle ${mounted && autoUpdate ? 'toggle-on' : ''}`}
-              >
-                <span />
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Version */}
         <p className="text-center text-[11px] text-[var(--muted)]">
-          Memento v{APP_VERSION} · Private Offline Trip Memory Sharing
+          Memento v0.1.1 · Private Offline Trip Memory Sharing
         </p>
       </div>
 
