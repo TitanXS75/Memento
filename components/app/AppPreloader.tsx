@@ -74,19 +74,19 @@ export function AppPreloader({
 
       {/* Ambient background memory glow */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="size-80 sm:size-96 rounded-full bg-[var(--accent)]/10 blur-3xl" />
+        <div className="size-80 sm:size-96 rounded-full bg-sky-400/15 blur-3xl" />
       </div>
 
       {/* Central Memory Aperture Emblem */}
       <div className="relative mb-6 flex items-center justify-center">
         {/* Outer orbital decorative ring */}
-        <div className="absolute size-24 sm:size-28 rounded-full border border-dashed border-[var(--accent)]/25 animate-gentle-rotate" />
+        <div className="absolute size-24 sm:size-28 rounded-full border border-dashed border-sky-400/30 animate-gentle-rotate" />
         
         {/* Soft breathing halo ring */}
-        <div className="absolute size-20 sm:size-24 rounded-full border border-[var(--accent)]/20 animate-pulse-ring" />
+        <div className="absolute size-20 sm:size-24 rounded-full border border-sky-400/25 animate-pulse-ring" />
 
-        {/* Brand Core Icon */}
-        <div className="relative flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-[var(--accent)] text-white shadow-xl shadow-[var(--accent)]/25 transition-transform duration-500 hover:scale-105">
+        {/* Brand Core Icon - Sky blue background */}
+        <div className="relative flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-sky-400 text-white shadow-xl shadow-sky-400/35 transition-transform duration-500 hover:scale-105">
           <Logo className="size-7 sm:size-8 text-white" />
         </div>
       </div>
@@ -102,9 +102,9 @@ export function AppPreloader({
 
       {/* Subtle Breathing Memory Indicator Dots */}
       <div className="mt-8 flex items-center gap-2">
-        <span className="size-1.5 rounded-full bg-[var(--accent)]/40 animate-pulse [animation-delay:0ms]" />
-        <span className="size-1.5 rounded-full bg-[var(--accent)]/80 animate-pulse [animation-delay:300ms]" />
-        <span className="size-1.5 rounded-full bg-[var(--accent)] animate-pulse [animation-delay:600ms]" />
+        <span className="size-1.5 rounded-full bg-sky-400/40 animate-pulse [animation-delay:0ms]" />
+        <span className="size-1.5 rounded-full bg-sky-400/80 animate-pulse [animation-delay:300ms]" />
+        <span className="size-1.5 rounded-full bg-sky-400 animate-pulse [animation-delay:600ms]" />
       </div>
     </div>
   )

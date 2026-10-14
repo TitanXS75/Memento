@@ -2,7 +2,7 @@ import os
 import math
 from PIL import Image, ImageDraw
 
-def render_memento_logo(size, is_foreground_only=False, is_round=False, bg_color='#4B3F72'):
+def render_memento_logo(size, is_foreground_only=False, is_round=False, bg_color='#38BDF8'):
     # Render at 4x supersampling for ultra smooth antialiased curves
     scale = 4
     canvas_size = size * scale
@@ -115,7 +115,7 @@ def render_splash(width, height):
 
     # Center icon
     icon_size = min(int(min(width, height) * 0.38), 240)
-    icon_img = render_memento_logo(icon_size, is_foreground_only=False, is_round=False, bg_color='#4B3F72')
+    icon_img = render_memento_logo(icon_size, is_foreground_only=False, is_round=False, bg_color='#38BDF8')
 
     offset_x = (width - icon_size) // 2
     offset_y = (height - icon_size) // 2 - int(icon_size * 0.1)
