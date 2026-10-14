@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, ChevronRight, Moon, RefreshCw, Shield, Smartphone, Sparkles, Sun } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ConfirmDialog } from '@/components/app/ConfirmDialog'
 import { useUiStore } from '@/lib/store/ui'
 import {
@@ -15,9 +15,15 @@ import {
 export default function SettingsPage() {
   const { theme, toggleTheme, addToast } = useUiStore()
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [autoUpdate, setAutoUpdate] = useState(() => isAutoUpdateEnabled())
+  const [mounted, setMounted] = useState(false)
+  const [autoUpdate, setAutoUpdate] = useState(false)
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<string | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+    setAutoUpdate(isAutoUpdateEnabled())
+  }, [])
 
   const handleToggleAutoUpdate = () => {
     const next = !autoUpdate
@@ -175,10 +181,10 @@ export default function SettingsPage() {
               <button
                 type="button"
                 role="switch"
-                aria-checked={autoUpdate}
+                aria-checked={mounted ? autoUpdate : false}
                 aria-label="Toggle auto-update"
                 onClick={handleToggleAutoUpdate}
-                className={`toggle ${autoUpdate ? 'toggle-on' : ''}`}
+                className={`toggle ${mounted && autoUpdate ? 'toggle-on' : ''}`}
               >
                 <span />
               </button>
@@ -188,7 +194,7 @@ export default function SettingsPage() {
 
         {/* Version */}
         <p className="text-center text-[11px] text-[var(--muted)]">
-          Memento v0.1.0 · Private Offline Trip Memory Sharing
+          Memento v{APP_VERSION} · Private Offline Trip Memory Sharing
         </p>
       </div>
 

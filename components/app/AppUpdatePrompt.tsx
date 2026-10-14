@@ -18,7 +18,7 @@ export function AppUpdatePrompt() {
   const check = async () => {
     const res = await checkForAppUpdate()
     if (res.hasUpdate && res.remoteVersion) {
-      if (isUpdateDismissed(res.remoteVersion.buildTime)) {
+      if (isUpdateDismissed(res.remoteVersion.version)) {
         return
       }
 
@@ -26,7 +26,7 @@ export function AppUpdatePrompt() {
       if (isAutoUpdateEnabled()) {
         setIsUpdating(true)
         setTimeout(() => {
-          applyAppUpdate()
+          applyAppUpdate(res.remoteVersion!)
         }, 1200)
         return
       }
@@ -57,13 +57,14 @@ export function AppUpdatePrompt() {
   }, [])
 
   const handleUpdateNow = async () => {
+    if (!updateInfo) return
     setIsUpdating(true)
-    await applyAppUpdate()
+    await applyAppUpdate(updateInfo)
   }
 
   const handleDismiss = () => {
     if (updateInfo) {
-      dismissUpdate(updateInfo.buildTime)
+      dismissUpdate(updateInfo.version)
     }
     setUpdateInfo(null)
   }

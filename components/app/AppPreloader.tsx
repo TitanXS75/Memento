@@ -48,11 +48,10 @@ export function AppPreloader({
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--background)] overflow-hidden px-6 transition-all duration-1000 ease-[cubic-bezier(0.77,0,0.175,1)] ${
-        isFadingOut
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--background)] overflow-hidden px-6 transition-all duration-1000 ease-[cubic-bezier(0.77,0,0.175,1)] ${isFadingOut
           ? '-translate-y-full opacity-0 pointer-events-none'
           : 'translate-y-0 opacity-100'
-      }`}
+        }`}
     >
       <style>{`
         @keyframes preloader-bar {
@@ -65,16 +64,16 @@ export function AppPreloader({
       `}</style>
 
       {/* Brand Icon Mark */}
-      <div className="mb-6 flex size-16 items-center justify-center rounded-2xl bg-[var(--accent)] text-white shadow-2xl shadow-[var(--accent)]/25">
-        <Logo className="size-9 text-white" />
+      <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-[var(--accent)] text-white shadow-xl shadow-[var(--accent)]/20">
+        <Logo className="size-8 text-white" />
       </div>
 
-      {/* Brand Title - Instrument Serif font */}
-      <div className="text-[var(--foreground)] font-serif font-light tracking-[0.3em] sm:tracking-[0.45em] md:tracking-[0.6em] text-3xl sm:text-4xl md:text-5xl text-center select-none">
+      {/* Brand Title - Same font-sans as inside the app */}
+      <h1 className="text-[var(--foreground)] font-sans font-normal text-3xl sm:text-4xl tracking-[-0.03em] text-center select-none">
         {brandName}
-      </div>
+      </h1>
 
-      <p className="eyebrow mt-3 text-[10px] tracking-[0.28em] text-[var(--muted)]">
+      <p className="eyebrow mt-2.5 text-[10px] tracking-[0.2em] text-[var(--muted)]">
         Private Offline Memories
       </p>
 
