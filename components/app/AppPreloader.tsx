@@ -68,12 +68,44 @@ export function AppPreloader({
         Private Offline Memories
       </p>
 
-      {/* Subtle Breathing Theme Indicator Dots */}
-      <div className="mt-7 flex items-center gap-1.5">
-        <span className="size-1.5 rounded-full bg-[var(--accent)]/30 animate-pulse [animation-delay:0ms]" />
-        <span className="size-1.5 rounded-full bg-[var(--accent)]/60 animate-pulse [animation-delay:200ms]" />
-        <span className="size-1.5 rounded-full bg-[var(--accent)] animate-pulse [animation-delay:400ms]" />
+      {/* Linewise glowing indicator dots */}
+      <div className="mt-8 flex items-center gap-2" role="status" aria-label="Loading Memento">
+        <span className="preloader-dot preloader-dot-1" />
+        <span className="preloader-dot preloader-dot-2" />
+        <span className="preloader-dot preloader-dot-3" />
       </div>
+
+      <style>{`
+        @keyframes linewiseGlow {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(0.9);
+            box-shadow: none;
+          }
+          40% {
+            opacity: 0.9;
+            transform: scale(1.1);
+            box-shadow: 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent);
+          }
+        }
+        .preloader-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 9999px;
+          background-color: var(--accent);
+          display: inline-block;
+          animation: linewiseGlow 1.4s infinite ease-in-out;
+        }
+        .preloader-dot-1 {
+          animation-delay: 0s;
+        }
+        .preloader-dot-2 {
+          animation-delay: 0.22s;
+        }
+        .preloader-dot-3 {
+          animation-delay: 0.44s;
+        }
+      `}</style>
     </div>
   )
 }

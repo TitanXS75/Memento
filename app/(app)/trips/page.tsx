@@ -1,9 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { Package, Plus, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { ArchivesModal } from '@/components/app/ArchivesModal'
 import { CreateTripModal } from '@/components/app/CreateTripModal'
 import { EmptyState } from '@/components/app/EmptyState'
 import { TripCard } from '@/components/app/TripCard'
@@ -31,7 +31,6 @@ export default function TripsPage() {
 
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
-  const [showArchivesModal, setShowArchivesModal] = useState(false)
 
   useEffect(() => {
     loadTrips()
@@ -56,11 +55,10 @@ export default function TripsPage() {
           <h1 className="mt-1 font-sans text-4xl">All trips</h1>
         </div>
         <div className="flex items-center gap-2.5">
-          <button
-            type="button"
+          <Link
+            href="/archives"
             id="trips-archives-btn"
-            onClick={() => setShowArchivesModal(true)}
-            className="secondary-button h-11"
+            className="secondary-button h-11 inline-flex items-center gap-2"
             aria-label="View exported ZIP archives"
           >
             <Package size={16} aria-hidden="true" />
@@ -70,7 +68,7 @@ export default function TripsPage() {
                 {archives.length}
               </span>
             )}
-          </button>
+          </Link>
           <button
             type="button"
             id="trips-create-btn"
@@ -168,9 +166,7 @@ export default function TripsPage() {
         />
       )}
 
-      {showArchivesModal && (
-        <ArchivesModal onClose={() => setShowArchivesModal(false)} />
-      )}
+
     </>
   )
 }

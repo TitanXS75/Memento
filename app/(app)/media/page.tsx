@@ -23,6 +23,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   addWebMediaItems,
   checkMediaPermission,
+  getCachedMediaPermission,
   getDeviceMedia,
   requestMediaPermission,
   type DeviceMediaItem,
@@ -125,10 +126,7 @@ export default function MediaPage() {
   const [images, setImages] = useState<DeviceMediaItem[]>([])
   const [videos, setVideos] = useState<DeviceMediaItem[]>([])
   const [loading, setLoading] = useState<boolean>(true)
-  const [permission, setPermission] = useState<MediaPermissionStatus>({
-    granted: false,
-    status: 'prompt',
-  })
+  const [permission, setPermission] = useState<MediaPermissionStatus>(() => getCachedMediaPermission())
   const [previewItem, setPreviewItem] = useState<DeviceMediaItem | null>(null)
   const [activeZipDate, setActiveZipDate] = useState<{
     dateKey: string
@@ -343,7 +341,7 @@ export default function MediaPage() {
 
       <div className="module-enter mt-3 space-y-5">
         {/* Permission Request Banner (if not granted) */}
-        {!permission.granted && (
+        {!loading && !permission.granted && (
           <div className="flex flex-col gap-4 rounded-2xl border border-[var(--coral)]/30 bg-[var(--coral)]/5 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--coral)]/15 text-[var(--coral)]">

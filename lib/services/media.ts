@@ -60,23 +60,46 @@ function saveWebStoredMedia(data: { images: DeviceMediaItem[]; videos: DeviceMed
   }
 }
 
+const MEDIA_PERMISSION_CACHE_KEY = 'memento_media_permission_granted'
+
+/**
+ * Get synchronously cached media permission status to avoid banner flickering.
+ */
+export function getCachedMediaPermission(): MediaPermissionStatus {
+  if (typeof window === 'undefined') return { granted: false, status: 'prompt' }
+  try {
+    const cached = localStorage.getItem(MEDIA_PERMISSION_CACHE_KEY)
+    if (cached === 'true') {
+      return { granted: true, status: 'granted' }
+    }
+  } catch {
+    // ignore
+  }
+  return { granted: false, status: 'prompt' }
+}
+
 /**
  * Check whether device media permission is granted.
  */
 export async function checkMediaPermission(): Promise<MediaPermissionStatus> {
   if (Capacitor.isNativePlatform()) {
     try {
-      return await NativeDeviceMedia.checkMediaPermissions()
+      const res = await NativeDeviceMedia.checkMediaPermissions()
+      if (res && res.granted) {
+        try { localStorage.setItem(MEDIA_PERMISSION_CACHE_KEY, 'true') } catch {}
+      }
+      return res
     } catch (err) {
       console.warn('Native checkMediaPermissions error:', err)
-      return { granted: false, status: 'prompt' }
+      const cached = getCachedMediaPermission()
+      return cached.granted ? cached : { granted: false, status: 'prompt' }
     }
   }
 
   // On Web: granted if we have already accepted in this session or permission query
   if (typeof navigator !== 'undefined' && 'permissions' in navigator) {
     try {
-      // standard web permissions check (if supported)
+      try { localStorage.setItem(MEDIA_PERMISSION_CACHE_KEY, 'true') } catch {}
       return { granted: true, status: 'granted' }
     } catch {
       // ignore
@@ -92,7 +115,11 @@ export async function checkMediaPermission(): Promise<MediaPermissionStatus> {
 export async function requestMediaPermission(): Promise<MediaPermissionStatus> {
   if (Capacitor.isNativePlatform()) {
     try {
-      return await NativeDeviceMedia.requestMediaPermissions()
+      const res = await NativeDeviceMedia.requestMediaPermissions()
+      if (res && res.granted) {
+        try { localStorage.setItem(MEDIA_PERMISSION_CACHE_KEY, 'true') } catch {}
+      }
+      return res
     } catch (err) {
       console.error('Native requestMediaPermissions error:', err)
       return { granted: false, status: 'denied' }
@@ -100,6 +127,7 @@ export async function requestMediaPermission(): Promise<MediaPermissionStatus> {
   }
 
   // Web environment always ready for file input selection
+  try { localStorage.setItem(MEDIA_PERMISSION_CACHE_KEY, 'true') } catch {}
   return { granted: true, status: 'granted' }
 }
 

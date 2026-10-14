@@ -94,9 +94,9 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Version */}
+        {/* App identity footer */}
         <p className="text-center text-[11px] text-[var(--muted)]">
-          Memento v0.1.1 · Private Offline Trip Memory Sharing
+          Memento · Private Offline Trip Memory Sharing
         </p>
       </div>
 

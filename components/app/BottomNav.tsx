@@ -65,12 +65,6 @@ export function Sidebar({ profileInitials, onEditProfile }: {
             >
               <Icon size={18} aria-hidden="true" />
               {label}
-              {label === 'Media' && (
-                <span
-                  className="ml-auto size-2 rounded-full bg-[var(--coral)]"
-                  aria-hidden="true"
-                />
-              )}
             </Link>
           )
         })}
