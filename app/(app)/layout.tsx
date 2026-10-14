@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { BottomNav, Sidebar } from '@/components/app/BottomNav'
 import { ToastContainer } from '@/components/app/Toast'
+import { AppUpdatePrompt } from '@/components/app/AppUpdatePrompt'
 import { initTheme, useUiStore } from '@/lib/store/ui'
 
 function getInitials(name: string): string {
@@ -64,6 +65,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
 
       <BottomNav />
       <ToastContainer />
+      <AppUpdatePrompt />
 
       {/* Edit name modal */}
       {showEditName && (

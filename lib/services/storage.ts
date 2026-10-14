@@ -18,6 +18,8 @@ export interface StorageStats {
   usedBytes: number
   photosCount: number
   videosCount: number
+  photosBytes: number
+  videosBytes: number
   mediaBytes: number
   storagePermission: 'granted' | 'prompt' | 'denied'
   mediaPermission: 'granted' | 'prompt' | 'denied'
@@ -70,8 +72,8 @@ export function detectEnvironment(): EnvironmentInfo {
   }
 
   const notice = isWeb
-    ? `Can't detect physical phone storage — You are using ${browserName} on the web. Web browsers sandbox websites and allocate an origin quota (e.g. 2 GB) rather than revealing your actual hardware storage.`
-    : `Native ${osName} app detected. Physical device storage accessible.`
+    ? `Operating in browser on ${osName}. Media is indexed locally on your device.`
+    : `Native ${osName} app. Media stored and accessed directly on device.`
 
   return {
     isWeb,
@@ -119,70 +121,75 @@ export async function requestStorageAndMediaPermissions(): Promise<{
 }
 
 /**
- * Calculate the overall phone and media storage usage.
+ * Calculate the amount of storage occupied by images and videos on this particular device.
+ * Does not calculate device-wide hardware storage or browser quota estimates.
  */
 export async function calculateStorageStats(): Promise<StorageStats> {
   const env = detectEnvironment()
-  let totalBytes = 2 * 1024 * 1024 * 1024 // 2 GB default if browser sandbox
-  let usedBytes = 0
-  let availableBytes = totalBytes
 
-  if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
-    try {
-      const estimate = await navigator.storage.estimate()
-      if (estimate.quota != null) {
-        totalBytes = estimate.quota
-      }
-      if (estimate.usage != null) {
-        usedBytes = estimate.usage
-      }
-      availableBytes = Math.max(0, totalBytes - usedBytes)
-    } catch (err) {
-      console.warn('[memento/storage] estimate failed', err)
-    }
-  }
-
-  // Count photos, videos, and media bytes stored in IndexedDB
   let photosCount = 0
   let videosCount = 0
-  let mediaBytes = 0
+  let photosBytes = 0
+  let videosBytes = 0
 
+  const seenIds = new Set<string>()
+
+  // 1. Device media directly scanned from device
+  try {
+    const { getDeviceMedia } = await import('@/lib/services/media')
+    const devMedia = await getDeviceMedia('all', 1000)
+    for (const item of devMedia.images) {
+      if (!seenIds.has(item.id)) {
+        seenIds.add(item.id)
+        photosCount++
+        photosBytes += item.size || 0
+      }
+    }
+    for (const item of devMedia.videos) {
+      if (!seenIds.has(item.id)) {
+        seenIds.add(item.id)
+        videosCount++
+        videosBytes += item.size || 0
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2. Count local media stored in IndexedDB (avoid duplicates)
   try {
     const db = await getDb()
     const allMedia: MediaItem[] = await db.getAll('mediaItems')
     for (const item of allMedia) {
-      if (item.mediaType === 'video') {
-        videosCount++
-      } else {
-        photosCount++
+      if (!seenIds.has(item.id)) {
+        seenIds.add(item.id)
+        if (item.mediaType === 'video') {
+          videosCount++
+          videosBytes += item.sizeBytes || 0
+        } else {
+          photosCount++
+          photosBytes += item.sizeBytes || 0
+        }
       }
-      mediaBytes += item.sizeBytes || 0
     }
   } catch {
     // If DB is not ready or empty
   }
 
-  try {
-    const { getDeviceMedia } = await import('@/lib/services/media')
-    const devMedia = await getDeviceMedia('all', 500)
-    photosCount += devMedia.images.length
-    videosCount += devMedia.videos.length
-    mediaBytes += devMedia.images.reduce((acc, it) => acc + it.size, 0)
-    mediaBytes += devMedia.videos.reduce((acc, it) => acc + it.size, 0)
-  } catch {
-    // ignore
-  }
+  const mediaBytes = photosBytes + videosBytes
 
   const saved = getStoredStorageStats()
   const storagePermission = saved?.storagePermission ?? 'granted'
   const mediaPermission = saved?.mediaPermission ?? 'granted'
 
   const stats: StorageStats = {
-    availableBytes,
-    totalBytes,
-    usedBytes: Math.max(usedBytes, mediaBytes),
+    availableBytes: 0,
+    totalBytes: mediaBytes,
+    usedBytes: mediaBytes,
     photosCount,
     videosCount,
+    photosBytes,
+    videosBytes,
     mediaBytes,
     storagePermission,
     mediaPermission,

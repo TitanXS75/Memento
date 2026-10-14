@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   Info,
   Maximize2,
+  MoreVertical,
   Play,
   Plus,
   RefreshCw,
@@ -29,6 +30,8 @@ import {
 } from '@/lib/services/media'
 import { formatBytes } from '@/lib/services/hash'
 import { useUiStore } from '@/lib/store/ui'
+import { DateMediaList, type MediaDateGroup } from '@/components/app/DateMediaList'
+import { DateZipModal } from '@/components/app/DateZipModal'
 
 type DateFilterPreset = 'all' | 'today' | 'week' | 'month' | 'custom'
 
@@ -90,6 +93,25 @@ function formatDateHeader(dateKey: string): string {
   })
 }
 
+function formatDayMonthOnly(dateKey: string): string {
+  const [y, m, d] = dateKey.split('-').map(Number)
+  const targetDate = new Date(y, m - 1, d)
+  return targetDate.toLocaleDateString([], {
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
+function formatShortDate(dateKey: string): string {
+  const [y, m, d] = dateKey.split('-').map(Number)
+  const targetDate = new Date(y, m - 1, d)
+  return targetDate.toLocaleDateString([], {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
 function formatResolution(width?: number, height?: number): string | null {
   if (!width || !height) return null
   const mp = ((width * height) / 1000000).toFixed(1)
@@ -98,6 +120,7 @@ function formatResolution(width?: number, height?: number): string | null {
 
 export default function MediaPage() {
   const { addToast } = useUiStore()
+  const [viewMode, setViewMode] = useState<'dates' | 'grid'>('dates')
   const [activeBlock, setActiveBlock] = useState<'images' | 'videos'>('images')
   const [images, setImages] = useState<DeviceMediaItem[]>([])
   const [videos, setVideos] = useState<DeviceMediaItem[]>([])
@@ -107,6 +130,11 @@ export default function MediaPage() {
     status: 'prompt',
   })
   const [previewItem, setPreviewItem] = useState<DeviceMediaItem | null>(null)
+  const [activeZipDate, setActiveZipDate] = useState<{
+    dateKey: string
+    dateLabel: string
+    items: DeviceMediaItem[]
+  } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Date filtering state
@@ -229,6 +257,37 @@ export default function MediaPage() {
     return groups
   }, [filteredItems])
 
+  const allDeviceItems = useMemo(() => {
+    return [...images, ...videos].sort((a, b) => b.date - a.date)
+  }, [images, videos])
+
+  const allDatesList = useMemo<MediaDateGroup[]>(() => {
+    const map = new Map<string, DeviceMediaItem[]>()
+    allDeviceItems.forEach((item) => {
+      const key = getDateKey(item.date)
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(item)
+    })
+
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([dateKey, dateItems]) => {
+        const photos = dateItems.filter((i) => i.type === 'photo')
+        const vids = dateItems.filter((i) => i.type === 'video')
+        const totalBytes = dateItems.reduce((acc, it) => acc + (it.size || 0), 0)
+        return {
+          dateKey,
+          shortDate: formatDayMonthOnly(dateKey),
+          fullDate: formatShortDate(dateKey),
+          headerLabel: formatDateHeader(dateKey),
+          items: dateItems,
+          photos,
+          videos: vids,
+          totalBytes,
+        }
+      })
+  }, [allDeviceItems])
+
   return (
     <>
       {/* Header */}
@@ -310,280 +369,354 @@ export default function MediaPage() {
           </div>
         )}
 
-        {/* Two Interactive Category Blocks: Images & Videos */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Images Block */}
-          <button
-            type="button"
-            onClick={() => setActiveBlock('images')}
-            className={`flex flex-col items-start rounded-2xl border p-4 sm:p-5 text-left transition-all ${
-              activeBlock === 'images'
-                ? 'border-[var(--accent)] bg-[var(--surface-strong)] shadow-xs ring-1 ring-[var(--accent)]/30'
-                : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)]'
-            }`}
-          >
-            <div className="flex w-full items-center justify-between">
-              <div
-                className={`flex size-10 items-center justify-center rounded-xl transition ${
-                  activeBlock === 'images'
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'bg-[var(--surface-strong)] text-[var(--muted)]'
-                }`}
-              >
-                <ImageIcon size={20} aria-hidden="true" />
-              </div>
-              {activeBlock === 'images' && (
-                <CheckCircle2 size={16} className="text-[var(--accent)]" aria-hidden="true" />
-              )}
-            </div>
-            <p className="mt-3.5 font-sans text-xl sm:text-2xl font-normal text-[var(--foreground)]">
-              Images
-            </p>
-            <p className="mt-0.5 text-xs text-[var(--muted)]">
-              {loading ? 'Checking…' : `${images.length} ${images.length === 1 ? 'photo' : 'photos'}`}
-            </p>
-          </button>
+        {/* View Mode Switcher: Dates View vs Media Grid */}
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+          <div className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1 text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('dates')}
+              className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium transition ${
+                viewMode === 'dates'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <Calendar size={13} />
+              <span>Dates View</span>
+              <span className="rounded-full bg-black/15 dark:bg-white/15 px-1.5 py-0.2 text-[10px]">
+                {allDatesList.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium transition ${
+                viewMode === 'grid'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <ImageIcon size={13} />
+              <span>Media Grid</span>
+              <span className="rounded-full bg-black/15 dark:bg-white/15 px-1.5 py-0.2 text-[10px]">
+                {images.length + videos.length}
+              </span>
+            </button>
+          </div>
 
-          {/* Videos Block */}
-          <button
-            type="button"
-            onClick={() => setActiveBlock('videos')}
-            className={`flex flex-col items-start rounded-2xl border p-4 sm:p-5 text-left transition-all ${
-              activeBlock === 'videos'
-                ? 'border-[var(--accent)] bg-[var(--surface-strong)] shadow-xs ring-1 ring-[var(--accent)]/30'
-                : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)]'
-            }`}
-          >
-            <div className="flex w-full items-center justify-between">
-              <div
-                className={`flex size-10 items-center justify-center rounded-xl transition ${
-                  activeBlock === 'videos'
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'bg-[var(--surface-strong)] text-[var(--muted)]'
-                }`}
-              >
-                <Video size={20} aria-hidden="true" />
-              </div>
-              {activeBlock === 'videos' && (
-                <CheckCircle2 size={16} className="text-[var(--accent)]" aria-hidden="true" />
-              )}
-            </div>
-            <p className="mt-3.5 font-sans text-xl sm:text-2xl font-normal text-[var(--foreground)]">
-              Videos
-            </p>
-            <p className="mt-0.5 text-xs text-[var(--muted)]">
-              {loading ? 'Checking…' : `${videos.length} ${videos.length === 1 ? 'video' : 'videos'}`}
-            </p>
-          </button>
+          <p className="hidden sm:block text-xs text-[var(--muted)]">
+            {viewMode === 'dates'
+              ? 'Organized by dates · Convert any date to ZIP'
+              : 'Category browsing · Original phone files'}
+          </p>
         </div>
 
-        {/* Date Filter Bar */}
-        {(showFilterBar || dateFilter !== 'all') && (
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2 text-xs font-medium text-[var(--foreground)]">
-                <Calendar size={14} className="text-[var(--accent)]" />
-                <span>Filter by capture date</span>
-              </div>
-              {dateFilter !== 'all' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDateFilter('all')
-                    setCustomStartDate('')
-                    setCustomEndDate('')
-                  }}
-                  className="rounded-lg border border-[var(--border)] bg-[var(--surface-strong)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)] hover:border-[var(--coral)] hover:text-[var(--coral)] transition"
-                >
-                  Reset filter
-                </button>
-              )}
+        {viewMode === 'dates' ? (
+          <DateMediaList
+            dates={allDatesList}
+            loading={loading}
+            permissionGranted={permission.granted}
+            onRequestPermission={handleRequestPermission}
+            onSelectFiles={() => fileInputRef.current?.click()}
+            onPreviewItem={(item) => setPreviewItem(item)}
+            onOpenZipModal={(dateKey, dateLabel, items) => {
+              setActiveZipDate({ dateKey, dateLabel, items })
+            }}
+          />
+        ) : (
+          <div className="space-y-5">
+            {/* Two Interactive Category Blocks: Images & Videos */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Images Block */}
+              <button
+                type="button"
+                onClick={() => setActiveBlock('images')}
+                className={`flex flex-col items-start rounded-2xl border p-4 sm:p-5 text-left transition-all ${
+                  activeBlock === 'images'
+                    ? 'border-[var(--accent)] bg-[var(--surface-strong)] shadow-xs ring-1 ring-[var(--accent)]/30'
+                    : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)]'
+                }`}
+              >
+                <div className="flex w-full items-center justify-between">
+                  <div
+                    className={`flex size-10 items-center justify-center rounded-xl transition ${
+                      activeBlock === 'images'
+                        ? 'bg-[var(--accent)] text-white'
+                        : 'bg-[var(--surface-strong)] text-[var(--muted)]'
+                    }`}
+                  >
+                    <ImageIcon size={20} aria-hidden="true" />
+                  </div>
+                  {activeBlock === 'images' && (
+                    <CheckCircle2 size={16} className="text-[var(--accent)]" aria-hidden="true" />
+                  )}
+                </div>
+                <p className="mt-3.5 font-sans text-xl sm:text-2xl font-normal text-[var(--foreground)]">
+                  Images
+                </p>
+                <p className="mt-0.5 text-xs text-[var(--muted)]">
+                  {loading ? 'Checking…' : `${images.length} ${images.length === 1 ? 'photo' : 'photos'}`}
+                </p>
+              </button>
+
+              {/* Videos Block */}
+              <button
+                type="button"
+                onClick={() => setActiveBlock('videos')}
+                className={`flex flex-col items-start rounded-2xl border p-4 sm:p-5 text-left transition-all ${
+                  activeBlock === 'videos'
+                    ? 'border-[var(--accent)] bg-[var(--surface-strong)] shadow-xs ring-1 ring-[var(--accent)]/30'
+                    : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)]'
+                }`}
+              >
+                <div className="flex w-full items-center justify-between">
+                  <div
+                    className={`flex size-10 items-center justify-center rounded-xl transition ${
+                      activeBlock === 'videos'
+                        ? 'bg-[var(--accent)] text-white'
+                        : 'bg-[var(--surface-strong)] text-[var(--muted)]'
+                    }`}
+                  >
+                    <Video size={20} aria-hidden="true" />
+                  </div>
+                  {activeBlock === 'videos' && (
+                    <CheckCircle2 size={16} className="text-[var(--accent)]" aria-hidden="true" />
+                  )}
+                </div>
+                <p className="mt-3.5 font-sans text-xl sm:text-2xl font-normal text-[var(--foreground)]">
+                  Videos
+                </p>
+                <p className="mt-0.5 text-xs text-[var(--muted)]">
+                  {loading ? 'Checking…' : `${videos.length} ${videos.length === 1 ? 'video' : 'videos'}`}
+                </p>
+              </button>
             </div>
 
-            {/* Quick Presets */}
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {(
-                [
-                  { id: 'all', label: 'All dates' },
-                  { id: 'today', label: 'Today' },
-                  { id: 'week', label: 'Past 7 days' },
-                  { id: 'month', label: 'Past 30 days' },
-                  { id: 'custom', label: 'Custom range…' },
-                ] as const
-              ).map(({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setDateFilter(id)}
-                  className={`rounded-full px-3 py-1 text-xs transition ${
-                    dateFilter === id
-                      ? 'bg-[var(--accent)] text-white font-medium'
-                      : 'bg-[var(--surface-strong)] text-[var(--muted)] hover:text-[var(--foreground)]'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {/* Date Filter Bar */}
+            {(showFilterBar || dateFilter !== 'all') && (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                  <div className="flex items-center gap-2 text-xs font-medium text-[var(--foreground)]">
+                    <Calendar size={14} className="text-[var(--accent)]" />
+                    <span>Filter by capture date</span>
+                  </div>
+                  {dateFilter !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDateFilter('all')
+                        setCustomStartDate('')
+                        setCustomEndDate('')
+                      }}
+                      className="rounded-lg border border-[var(--border)] bg-[var(--surface-strong)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)] hover:border-[var(--coral)] hover:text-[var(--coral)] transition"
+                    >
+                      Reset filter
+                    </button>
+                  )}
+                </div>
 
-            {/* Custom Range Inputs */}
-            {dateFilter === 'custom' && (
-              <div className="mt-3 grid grid-cols-2 gap-3 pt-2">
-                <label className="text-[11px] text-[var(--muted)]">
-                  Start Date
-                  <input
-                    type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="field mt-1 text-xs"
-                  />
-                </label>
-                <label className="text-[11px] text-[var(--muted)]">
-                  End Date
-                  <input
-                    type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="field mt-1 text-xs"
-                  />
-                </label>
-              </div>
-            )}
-          </div>
-        )}
+                {/* Quick Presets */}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {(
+                    [
+                      { id: 'all', label: 'All dates' },
+                      { id: 'today', label: 'Today' },
+                      { id: 'week', label: 'Past 7 days' },
+                      { id: 'month', label: 'Past 30 days' },
+                      { id: 'custom', label: 'Custom range…' },
+                    ] as const
+                  ).map(({ id, label }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setDateFilter(id)}
+                      className={`rounded-full px-3 py-1 text-xs transition ${
+                        dateFilter === id
+                          ? 'bg-[var(--accent)] text-white font-medium'
+                          : 'bg-[var(--surface-strong)] text-[var(--muted)] hover:text-[var(--foreground)]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
 
-        {/* Media Grid Arranged Properly by Dates */}
-        <div>
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <RefreshCw size={26} className="animate-spin text-[var(--accent)]" />
-              <p className="mt-3 text-sm text-[var(--muted)]">Reading photo & video details…</p>
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] py-16 text-center">
-              {activeBlock === 'images' ? (
-                <ImageIcon size={32} className="text-[var(--muted)]" aria-hidden="true" />
-              ) : (
-                <Video size={32} className="text-[var(--muted)]" aria-hidden="true" />
-              )}
-              <p className="mt-3 text-sm font-medium text-[var(--foreground)]">
-                {activeBlock === 'images' ? 'No images found' : 'No videos found'}
-              </p>
-              <p className="mt-1 max-w-xs text-xs text-[var(--muted)] leading-relaxed">
-                {!permission.granted
-                  ? 'Grant storage permission to view media stored on your phone.'
-                  : dateFilter !== 'all'
-                  ? 'No items found matching the selected date filter.'
-                  : `No ${activeBlock} discovered on device storage yet.`}
-              </p>
-              <div className="mt-4 flex gap-3">
-                {!permission.granted ? (
-                  <button
-                    type="button"
-                    onClick={handleRequestPermission}
-                    className="primary-button text-xs"
-                  >
-                    Grant permission
-                  </button>
-                ) : dateFilter !== 'all' ? (
-                  <button
-                    type="button"
-                    onClick={() => setDateFilter('all')}
-                    className="secondary-button text-xs"
-                  >
-                    Clear date filter
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="secondary-button text-xs"
-                  >
-                    Select files
-                  </button>
+                {/* Custom Range Inputs */}
+                {dateFilter === 'custom' && (
+                  <div className="mt-3 grid grid-cols-2 gap-3 pt-2">
+                    <label className="text-[11px] text-[var(--muted)]">
+                      Start Date
+                      <input
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                        className="field mt-1 text-xs"
+                      />
+                    </label>
+                    <label className="text-[11px] text-[var(--muted)]">
+                      End Date
+                      <input
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                        className="field mt-1 text-xs"
+                      />
+                    </label>
+                  </div>
                 )}
               </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {groupedByDate.map((group) => (
-                <section key={group.dateKey} className="space-y-3">
-                  {/* Date Section Header */}
-                  <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-1.5">
-                    <div className="flex items-baseline gap-2">
-                      <h2 className="text-sm font-medium text-[var(--foreground)]">
-                        {group.label}
-                      </h2>
-                      <span className="text-[11px] text-[var(--muted)]">
-                        {group.dateKey}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-[var(--muted)]">
-                      {group.items.length} {group.items.length === 1 ? 'item' : 'items'} • {formatBytes(group.totalBytes)}
-                    </span>
-                  </div>
+            )}
 
-                  {/* Photos / Videos Grid for this date */}
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {group.items.map((item) => (
+            {/* Media Grid Arranged Properly by Dates */}
+            <div>
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <RefreshCw size={26} className="animate-spin text-[var(--accent)]" />
+                  <p className="mt-3 text-sm text-[var(--muted)]">Reading photo & video details…</p>
+                </div>
+              ) : filteredItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] py-16 text-center">
+                  {activeBlock === 'images' ? (
+                    <ImageIcon size={32} className="text-[var(--muted)]" aria-hidden="true" />
+                  ) : (
+                    <Video size={32} className="text-[var(--muted)]" aria-hidden="true" />
+                  )}
+                  <p className="mt-3 text-sm font-medium text-[var(--foreground)]">
+                    {activeBlock === 'images' ? 'No images found' : 'No videos found'}
+                  </p>
+                  <p className="mt-1 max-w-xs text-xs text-[var(--muted)] leading-relaxed">
+                    {!permission.granted
+                      ? 'Grant storage permission to view media stored on your phone.'
+                      : dateFilter !== 'all'
+                      ? 'No items found matching the selected date filter.'
+                      : `No ${activeBlock} discovered on device storage yet.`}
+                  </p>
+                  <div className="mt-4 flex gap-3">
+                    {!permission.granted ? (
                       <button
-                        key={item.id}
                         type="button"
-                        onClick={() => setPreviewItem(item)}
-                        className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left transition hover:border-[var(--accent)] hover:shadow-xs"
+                        onClick={handleRequestPermission}
+                        className="primary-button text-xs"
                       >
-                        {/* Thumbnail / Media Container */}
-                        <div className="relative aspect-square w-full overflow-hidden bg-[var(--surface-strong)]">
-                          {item.thumbnail ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={item.thumbnail}
-                              alt={item.name}
-                              loading="lazy"
-                              className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                          ) : item.type === 'video' ? (
-                            <div className="flex size-full items-center justify-center bg-[var(--surface-strong)] text-[var(--accent)]">
-                              <Video size={30} aria-hidden="true" />
-                            </div>
-                          ) : (
-                            <div className="flex size-full items-center justify-center bg-[var(--surface-strong)] text-[var(--muted)]">
-                              <ImageIcon size={30} aria-hidden="true" />
-                            </div>
-                          )}
-
-                          {/* Video Duration Badge */}
-                          {item.type === 'video' && (
-                            <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
-                              <Play size={10} className="fill-white" aria-hidden="true" />
-                              <span>{formatDuration(item.duration)}</span>
-                            </div>
-                          )}
-
-                          {/* Hover action icon */}
-                          <div className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100">
-                            <Maximize2 size={12} />
-                          </div>
-                        </div>
-
-                        {/* Metadata Bar */}
-                        <div className="p-2.5">
-                          <p className="truncate text-xs font-medium text-[var(--foreground)]" title={item.name}>
-                            {item.name}
-                          </p>
-                          <div className="mt-1 flex items-center justify-between text-[10px] text-[var(--muted)]">
-                            <span>{formatBytes(item.size)}</span>
-                            <span>{formatTimeOnly(item.date)}</span>
-                          </div>
-                        </div>
+                        Grant permission
                       </button>
-                    ))}
+                    ) : dateFilter !== 'all' ? (
+                      <button
+                        type="button"
+                        onClick={() => setDateFilter('all')}
+                        className="secondary-button text-xs"
+                      >
+                        Clear date filter
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="secondary-button text-xs"
+                      >
+                        Select files
+                      </button>
+                    )}
                   </div>
-                </section>
-              ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {groupedByDate.map((group) => (
+                    <section key={group.dateKey} className="space-y-3">
+                      {/* Date Section Header */}
+                      <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-1.5">
+                        <div className="flex items-baseline gap-2">
+                          <h2 className="text-sm font-medium text-[var(--foreground)]">
+                            {group.label}
+                          </h2>
+                          <span className="text-[11px] text-[var(--muted)]">
+                            {group.dateKey}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-[var(--muted)]">
+                            {group.items.length} {group.items.length === 1 ? 'item' : 'items'} • {formatBytes(group.totalBytes)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActiveZipDate({
+                                dateKey: group.dateKey,
+                                dateLabel: group.label,
+                                items: group.items,
+                              })
+                            }
+                            title={`Make ZIP for ${group.label}`}
+                            className="rounded-full p-1 text-[var(--muted)] hover:bg-[var(--surface-strong)] hover:text-[var(--accent)] transition"
+                          >
+                            <MoreVertical size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Photos / Videos Grid for this date */}
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {group.items.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setPreviewItem(item)}
+                            className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left transition hover:border-[var(--accent)] hover:shadow-xs"
+                          >
+                            {/* Thumbnail / Media Container */}
+                            <div className="relative aspect-square w-full overflow-hidden bg-[var(--surface-strong)]">
+                              {item.thumbnail ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={item.thumbnail}
+                                  alt={item.name}
+                                  loading="lazy"
+                                  className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                              ) : item.type === 'video' ? (
+                                <div className="flex size-full items-center justify-center bg-[var(--surface-strong)] text-[var(--accent)]">
+                                  <Video size={30} aria-hidden="true" />
+                                </div>
+                              ) : (
+                                <div className="flex size-full items-center justify-center bg-[var(--surface-strong)] text-[var(--muted)]">
+                                  <ImageIcon size={30} aria-hidden="true" />
+                                </div>
+                              )}
+
+                              {/* Video Duration Badge */}
+                              {item.type === 'video' && (
+                                <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
+                                  <Play size={10} className="fill-white" aria-hidden="true" />
+                                  <span>{formatDuration(item.duration)}</span>
+                                </div>
+                              )}
+
+                              {/* Hover action icon */}
+                              <div className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100">
+                                <Maximize2 size={12} />
+                              </div>
+                            </div>
+
+                            {/* Metadata Bar */}
+                            <div className="p-2.5">
+                              <p className="truncate text-xs font-medium text-[var(--foreground)]" title={item.name}>
+                                {item.name}
+                              </p>
+                              <div className="mt-1 flex items-center justify-between text-[10px] text-[var(--muted)]">
+                                <span>{formatBytes(item.size)}</span>
+                                <span>{formatTimeOnly(item.date)}</span>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Media Detail & Preview Modal */}
@@ -688,6 +821,17 @@ export default function MediaPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Date ZIP Export Modal */}
+      {activeZipDate && (
+        <DateZipModal
+          isOpen={!!activeZipDate}
+          onClose={() => setActiveZipDate(null)}
+          dateKey={activeZipDate.dateKey}
+          dateLabel={activeZipDate.dateLabel}
+          items={activeZipDate.items}
+        />
       )}
     </>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { Archive, Package, Plus, Search } from 'lucide-react'
+import { Package, Plus, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { ArchivesModal } from '@/components/app/ArchivesModal'
@@ -10,8 +10,6 @@ import { TripCard } from '@/components/app/TripCard'
 import { useArchivesStore } from '@/lib/store/archives'
 import { useTripsStore } from '@/lib/store/trips'
 import { useUiStore } from '@/lib/store/ui'
-
-type TripFilterTab = 'active' | 'archived' | 'all'
 
 export default function TripsPage() {
   const { trips, loading, error, loadTrips, createTrip, archiveTrip, restoreTrip, deleteTrip } = useTripsStore(
@@ -32,7 +30,6 @@ export default function TripsPage() {
   const { addToast } = useUiStore()
 
   const [search, setSearch] = useState('')
-  const [filterTab, setFilterTab] = useState<TripFilterTab>('active')
   const [showCreate, setShowCreate] = useState(false)
   const [showArchivesModal, setShowArchivesModal] = useState(false)
 
@@ -49,14 +46,7 @@ export default function TripsPage() {
     )
   }, [trips, search])
 
-  const activeTrips = useMemo(() => filtered.filter((t) => !t.archivedAt), [filtered])
-  const archivedTrips = useMemo(() => filtered.filter((t) => !!t.archivedAt), [filtered])
-
-  const displayedTrips = useMemo(() => {
-    if (filterTab === 'active') return activeTrips
-    if (filterTab === 'archived') return archivedTrips
-    return filtered
-  }, [filterTab, activeTrips, archivedTrips, filtered])
+  const displayedTrips = useMemo(() => filtered.filter((t) => !t.archivedAt), [filtered])
 
   return (
     <>
@@ -93,48 +83,26 @@ export default function TripsPage() {
         </div>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1 text-xs">
-          <button
-            type="button"
-            onClick={() => setFilterTab('active')}
-            className={`rounded-full px-3.5 py-1 font-medium transition ${
-              filterTab === 'active' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)] hover:text-[var(--foreground)]'
-            }`}
-          >
-            Active ({activeTrips.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterTab('archived')}
-            className={`flex items-center gap-1 rounded-full px-3.5 py-1 font-medium transition ${
-              filterTab === 'archived' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)] hover:text-[var(--foreground)]'
-            }`}
-          >
-            <Archive size={12} />
-            Archived ({archivedTrips.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterTab('all')}
-            className={`rounded-full px-3.5 py-1 font-medium transition ${
-              filterTab === 'all' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)] hover:text-[var(--foreground)]'
-            }`}
-          >
-            All ({filtered.length})
-          </button>
-        </div>
-
-        <div className="flex flex-1 sm:max-w-xs items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs">
+      {/* Search Bar */}
+      <div className="mt-7 flex items-center justify-between gap-3">
+        <div className="flex flex-1 sm:max-w-md items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-xs">
           <Search size={15} className="shrink-0 text-[var(--muted)]" aria-hidden="true" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search trips…"
+            placeholder="Search trips by name or description…"
             aria-label="Search trips"
             className="w-full bg-transparent text-xs outline-none placeholder:text-[var(--muted)]"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
@@ -155,17 +123,15 @@ export default function TripsPage() {
               title={
                 search
                   ? 'No trips match your search.'
-                  : filterTab === 'archived'
-                  ? 'No archived trips.'
                   : 'No trips yet.'
               }
               description={
-                !search && filterTab === 'active'
+                !search
                   ? 'Create your first trip to get started.'
                   : undefined
               }
-              actionLabel={!search && filterTab === 'active' ? 'Create a trip' : undefined}
-              onAction={!search && filterTab === 'active' ? () => setShowCreate(true) : undefined}
+              actionLabel={!search ? 'Create a trip' : undefined}
+              onAction={!search ? () => setShowCreate(true) : undefined}
             />
           ) : (
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">

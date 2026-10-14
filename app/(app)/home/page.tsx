@@ -173,9 +173,9 @@ export default function HomePage() {
           <div className="surface-card">
             <div className="flex items-start justify-between">
               <div>
-                <p className="eyebrow">Available storage</p>
+                <p className="eyebrow">Device Media Storage</p>
                 <p className="mt-2 font-sans text-4xl">
-                  {storageStats ? formatBytes(storageStats.availableBytes) : '—'}
+                  {storageStats ? formatBytes(storageStats.mediaBytes) : '0 B'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export default function HomePage() {
                   type="button"
                   onClick={refreshStorage}
                   disabled={isRefreshingStorage}
-                  aria-label="Recalculate device storage"
+                  aria-label="Recalculate media storage"
                   className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface-strong)] transition"
                 >
                   <RefreshCw size={15} className={isRefreshingStorage ? 'animate-spin text-[var(--accent)]' : ''} />
@@ -193,41 +193,72 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="mt-7 h-2 overflow-hidden rounded-full bg-[var(--surface-strong)]">
+
+            {/* Split bar: Photos vs Videos */}
+            <div className="mt-7 h-2.5 overflow-hidden rounded-full bg-[var(--surface-strong)] flex">
               <div
-                className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
+                className="h-full bg-[var(--accent)] transition-all duration-500"
                 style={{
-                  width: `${storageStats ? Math.max(2, Math.min(100, Math.round((storageStats.usedBytes / storageStats.totalBytes) * 100))) : 0}%`,
+                  width: `${
+                    storageStats && storageStats.mediaBytes > 0
+                      ? Math.max(storageStats.photosBytes > 0 ? 5 : 0, Math.round((storageStats.photosBytes / storageStats.mediaBytes) * 100))
+                      : 50
+                  }%`,
                 }}
+                title={`Photos: ${storageStats ? formatBytes(storageStats.photosBytes) : '0 B'}`}
+              />
+              <div
+                className="h-full bg-[var(--coral)] transition-all duration-500"
+                style={{
+                  width: `${
+                    storageStats && storageStats.mediaBytes > 0
+                      ? Math.max(storageStats.videosBytes > 0 ? 5 : 0, Math.round((storageStats.videosBytes / storageStats.mediaBytes) * 100))
+                      : 50
+                  }%`,
+                }}
+                title={`Videos: ${storageStats ? formatBytes(storageStats.videosBytes) : '0 B'}`}
               />
             </div>
-            <p className="mt-3 text-[11px] text-[var(--muted)]">
-              {storageStats
-                ? `${formatBytes(storageStats.usedBytes)} used of ${formatBytes(storageStats.totalBytes)} total space`
-                : 'Calculating device storage…'}
-            </p>
 
-            {storageStats?.environment.isWeb && (
-              <div className="mt-3 flex items-start gap-2 rounded-xl bg-[var(--surface-strong)] p-2.5 text-[11px] text-[var(--muted)] leading-relaxed">
-                <Globe size={13} className="mt-0.5 shrink-0 text-[var(--accent)]" />
-                <p>
-                  <strong>Can&apos;t detect physical phone storage</strong> — You are using {storageStats.environment.browserName} on the web. Showing browser sandbox quota.
-                </p>
+            <div className="mt-3 flex items-center justify-between text-[11px] text-[var(--muted)]">
+              <span>
+                {storageStats
+                  ? `${storageStats.photosCount + storageStats.videosCount} media files on this device`
+                  : 'Scanning device media…'}
+              </span>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-[var(--accent)]" /> Photos
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-[var(--coral)]" /> Videos
+                </span>
               </div>
-            )}
+            </div>
+
             <div className="mt-7 grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-5">
               <div className="flex items-center gap-3">
                 <div className="icon-box"><ImageIcon size={17} aria-hidden="true" /></div>
                 <div>
                   <p className="eyebrow">Photos</p>
-                  <p className="mt-0.5 text-sm font-medium">{storageStats?.photosCount ?? 0}</p>
+                  <p className="mt-0.5 text-sm font-medium">
+                    {storageStats?.photosCount ?? 0}
+                    <span className="ml-1 text-xs font-normal text-[var(--muted)]">
+                      ({storageStats ? formatBytes(storageStats.photosBytes) : '0 B'})
+                    </span>
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="icon-box"><Video size={17} aria-hidden="true" /></div>
                 <div>
                   <p className="eyebrow">Videos</p>
-                  <p className="mt-0.5 text-sm font-medium">{storageStats?.videosCount ?? 0}</p>
+                  <p className="mt-0.5 text-sm font-medium">
+                    {storageStats?.videosCount ?? 0}
+                    <span className="ml-1 text-xs font-normal text-[var(--muted)]">
+                      ({storageStats ? formatBytes(storageStats.videosBytes) : '0 B'})
+                    </span>
+                  </p>
                 </div>
               </div>
             </div>
