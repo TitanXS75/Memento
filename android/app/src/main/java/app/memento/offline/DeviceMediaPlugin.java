@@ -165,7 +165,7 @@ public class DeviceMediaPlugin extends Plugin {
                         item.put("orientation", orient);
                         item.put("uri", itemUri.toString());
 
-                        String thumb = loadBase64Thumbnail(resolver, itemUri, 200, 200);
+                        String thumb = loadBase64Thumbnail(resolver, itemUri, 640, 640);
                         if (thumb != null) {
                             item.put("thumbnail", thumb);
                         }
@@ -234,7 +234,7 @@ public class DeviceMediaPlugin extends Plugin {
                         item.put("type", "video");
                         item.put("uri", itemUri.toString());
 
-                        String thumb = loadBase64Thumbnail(resolver, itemUri, 200, 200);
+                        String thumb = loadBase64Thumbnail(resolver, itemUri, 640, 640);
                         if (thumb != null) {
                             item.put("thumbnail", thumb);
                         }
@@ -259,7 +259,7 @@ public class DeviceMediaPlugin extends Plugin {
                 Bitmap bmp = resolver.loadThumbnail(uri, new Size(w, h), null);
                 if (bmp != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bmp.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 85, baos);
                     bmp.recycle();
                     byte[] bytes = baos.toByteArray();
                     return "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP);

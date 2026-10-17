@@ -196,7 +196,7 @@ export function parseMediaCaptureDate(filename: string, fallbackTimestamp?: numb
 /**
  * Generate a compressed image thumbnail asynchronously using offscreen canvas.
  */
-export function generateImageThumbnail(dataUrl: string, maxDimension = 320): Promise<string> {
+export function generateImageThumbnail(dataUrl: string, maxDimension = 640): Promise<string> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined') return resolve(dataUrl)
 
@@ -225,7 +225,7 @@ export function generateImageThumbnail(dataUrl: string, maxDimension = 320): Pro
         if (!ctx) return resolve(dataUrl)
 
         ctx.drawImage(img, 0, 0, width, height)
-        const thumb = canvas.toDataURL('image/jpeg', 0.72)
+        const thumb = canvas.toDataURL('image/jpeg', 0.85)
         resolve(thumb)
       } catch {
         resolve(dataUrl)
@@ -341,7 +341,7 @@ export function addWebMediaItems(files: FileList | File[]): Promise<DeviceMediaI
         let thumbnail: string | undefined = undefined
         if (isImage) {
           try {
-            thumbnail = await generateImageThumbnail(dataUrl, 280)
+            thumbnail = await generateImageThumbnail(dataUrl, 640)
           } catch {
             thumbnail = dataUrl
           }

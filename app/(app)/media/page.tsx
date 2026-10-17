@@ -126,7 +126,8 @@ export default function MediaPage() {
   const [images, setImages] = useState<DeviceMediaItem[]>([])
   const [videos, setVideos] = useState<DeviceMediaItem[]>([])
   const [loading, setLoading] = useState<boolean>(true)
-  const [permission, setPermission] = useState<MediaPermissionStatus>({ granted: false, status: 'prompt' })
+  const [permission, setPermission] = useState<MediaPermissionStatus>(() => getCachedMediaPermission())
+  const [previewItem, setPreviewItem] = useState<DeviceMediaItem | null>(null)
 
   const [activeZipDate, setActiveZipDate] = useState<{
     dateKey: string
@@ -416,6 +417,7 @@ export default function MediaPage() {
             permissionGranted={permission.granted}
             onRequestPermission={handleRequestPermission}
             onSelectFiles={() => fileInputRef.current?.click()}
+            onPreviewItem={(item) => setPreviewItem(item)}
             onOpenZipModal={(dateKey, dateLabel, items) => {
               setActiveZipDate({ dateKey, dateLabel, items })
             }}
@@ -653,57 +655,63 @@ export default function MediaPage() {
 
                       {/* Photos / Videos Grid for this date */}
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                        {group.items.map((item) => (
-                          <div
-                            key={item.id}
-                            className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left transition hover:border-[var(--accent)] hover:shadow-xs"
-                          >
-                            {/* Thumbnail / Media Container */}
-                            <div className="relative aspect-square w-full overflow-hidden bg-[var(--surface-strong)]">
-                              {item.thumbnail ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                  src={item.thumbnail}
-                                  alt={item.name}
-                                  loading="lazy"
-                                  className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                />
-                              ) : item.type === 'video' ? (
-                                <div className="flex size-full items-center justify-center bg-[var(--surface-strong)] text-[var(--accent)]">
-                                  <Video size={30} aria-hidden="true" />
-                                </div>
-                              ) : (
-                                <div className="flex size-full items-center justify-center bg-[var(--surface-strong)] text-[var(--muted)]">
-                                  <ImageIcon size={30} aria-hidden="true" />
-                                </div>
-                              )}
+                        {group.items.map((item) => {
+                          const imgSrc = item.uri && !item.uri.startsWith('content://') ? item.uri : item.thumbnail
 
-                              {/* Video Duration Badge */}
-                              {item.type === 'video' && (
-                                <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
-                                  <Play size={10} className="fill-white" aria-hidden="true" />
-                                  <span>{formatDuration(item.duration)}</span>
-                                </div>
-                              )}
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setPreviewItem(item)}
+                              className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left transition hover:border-[var(--accent)] hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                            >
+                              {/* Thumbnail / Media Container */}
+                              <div className="relative aspect-square w-full overflow-hidden bg-[var(--surface-strong)]">
+                                {imgSrc ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={imgSrc}
+                                    alt={item.name}
+                                    loading="lazy"
+                                    className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  />
+                                ) : item.type === 'video' ? (
+                                  <div className="flex size-full items-center justify-center bg-[var(--surface-strong)] text-[var(--accent)]">
+                                    <Video size={30} aria-hidden="true" />
+                                  </div>
+                                ) : (
+                                  <div className="flex size-full items-center justify-center bg-[var(--surface-strong)] text-[var(--muted)]">
+                                    <ImageIcon size={30} aria-hidden="true" />
+                                  </div>
+                                )}
 
-                              {/* Hover action icon */}
-                              <div className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100">
-                                <Maximize2 size={12} />
+                                {/* Video Duration Badge */}
+                                {item.type === 'video' && (
+                                  <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
+                                    <Play size={10} className="fill-white" aria-hidden="true" />
+                                    <span>{formatDuration(item.duration)}</span>
+                                  </div>
+                                )}
+
+                                {/* Hover action icon */}
+                                <div className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100">
+                                  <Maximize2 size={12} />
+                                </div>
                               </div>
-                            </div>
 
-                            {/* Metadata Bar */}
-                            <div className="p-2.5">
-                              <p className="truncate text-xs font-medium text-[var(--foreground)]" title={item.name}>
-                                {item.name}
-                              </p>
-                              <div className="mt-1 flex items-center justify-between text-[10px] text-[var(--muted)]">
-                                <span>{formatBytes(item.size)}</span>
-                                <span>{formatTimeOnly(item.date)}</span>
+                              {/* Metadata Bar */}
+                              <div className="p-2.5">
+                                <p className="truncate text-xs font-medium text-[var(--foreground)]" title={item.name}>
+                                  {item.name}
+                                </p>
+                                <div className="mt-1 flex items-center justify-between text-[10px] text-[var(--muted)]">
+                                  <span>{formatBytes(item.size)}</span>
+                                  <span>{formatTimeOnly(item.date)}</span>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        ))}
+                            </button>
+                          )
+                        })}
                       </div>
                     </section>
                   ))}
@@ -713,6 +721,123 @@ export default function MediaPage() {
           </div>
         )}
       </div>
+
+      {/* Media Detail & Preview Modal */}
+      {previewItem && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPreviewItem(null)
+          }}
+        >
+          <div
+            className="modal-card max-w-lg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="media-preview-title"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+              <div className="min-w-0 pr-3">
+                <p className="eyebrow">{previewItem.type === 'photo' ? 'Photo Details' : 'Video Details'}</p>
+                <h3 id="media-preview-title" className="truncate font-sans text-xl">
+                  {previewItem.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewItem(null)}
+                aria-label="Close preview"
+                className="rounded-full p-1.5 text-[var(--muted)] hover:bg-[var(--surface-strong)] transition"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* Media Image / Video Preview */}
+            <div className="mt-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-black/5 dark:bg-black/30">
+              {previewItem.type === 'video' && previewItem.uri && !previewItem.uri.startsWith('content://') ? (
+                <video
+                  controls
+                  src={previewItem.uri}
+                  className="max-h-full max-w-full rounded-lg"
+                />
+              ) : previewItem.uri && !previewItem.uri.startsWith('content://') ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={previewItem.uri}
+                  alt={previewItem.name}
+                  className="max-h-full max-w-full object-contain"
+                />
+              ) : previewItem.thumbnail ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={previewItem.thumbnail}
+                  alt={previewItem.name}
+                  className="max-h-full max-w-full object-contain"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-[var(--muted)]">
+                  {previewItem.type === 'photo' ? <ImageIcon size={36} /> : <Video size={36} />}
+                  <span className="text-xs">Original media on phone storage</span>
+                </div>
+              )}
+            </div>
+
+            {/* Detailed Metadata Grid */}
+            <div className="mt-4 grid grid-cols-2 gap-2.5 rounded-xl bg-[var(--surface-strong)] p-3 text-xs">
+              <div className="flex items-center gap-2">
+                <Calendar size={13} className="shrink-0 text-[var(--accent)]" />
+                <span className="text-[var(--muted)]">Date:</span>
+                <span className="truncate font-medium text-[var(--foreground)]">{formatDateFull(previewItem.date)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock size={13} className="shrink-0 text-[var(--accent)]" />
+                <span className="text-[var(--muted)]">Time:</span>
+                <span className="font-medium text-[var(--foreground)]">{formatTimeOnly(previewItem.date)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <HardDrive size={13} className="shrink-0 text-[var(--accent)]" />
+                <span className="text-[var(--muted)]">Size:</span>
+                <span className="font-medium text-[var(--foreground)]">{formatBytes(previewItem.size)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Info size={13} className="shrink-0 text-[var(--accent)]" />
+                <span className="text-[var(--muted)]">Format:</span>
+                <span className="truncate font-medium uppercase text-[var(--foreground)]">
+                  {previewItem.mimeType ? previewItem.mimeType.split('/')[1] : previewItem.type}
+                </span>
+              </div>
+              {previewItem.width && previewItem.height ? (
+                <div className="col-span-2 flex items-center gap-2 border-t border-[var(--border)] pt-2">
+                  <Maximize2 size={13} className="shrink-0 text-[var(--accent)]" />
+                  <span className="text-[var(--muted)]">Resolution:</span>
+                  <span className="font-medium text-[var(--foreground)]">
+                    {formatResolution(previewItem.width, previewItem.height)}
+                  </span>
+                </div>
+              ) : null}
+              {previewItem.duration ? (
+                <div className="col-span-2 flex items-center gap-2 border-t border-[var(--border)] pt-2">
+                  <Play size={13} className="shrink-0 text-[var(--accent)]" />
+                  <span className="text-[var(--muted)]">Duration:</span>
+                  <span className="font-medium text-[var(--foreground)]">{formatDuration(previewItem.duration)}</span>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPreviewItem(null)}
+                className="secondary-button"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 
 
