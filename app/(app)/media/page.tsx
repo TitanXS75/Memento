@@ -33,7 +33,6 @@ import { formatBytes } from '@/lib/services/hash'
 import { useUiStore } from '@/lib/store/ui'
 import { DateMediaList, type MediaDateGroup } from '@/components/app/DateMediaList'
 import { DateZipModal } from '@/components/app/DateZipModal'
-import { MediaLightboxModal } from '@/components/app/MediaLightboxModal'
 
 type DateFilterPreset = 'all' | 'today' | 'week' | 'month' | 'custom'
 
@@ -127,11 +126,8 @@ export default function MediaPage() {
   const [images, setImages] = useState<DeviceMediaItem[]>([])
   const [videos, setVideos] = useState<DeviceMediaItem[]>([])
   const [loading, setLoading] = useState<boolean>(true)
-  const [permission, setPermission] = useState<MediaPermissionStatus>(() => getCachedMediaPermission())
-  const [lightboxState, setLightboxState] = useState<{
-    items: DeviceMediaItem[]
-    index: number
-  } | null>(null)
+  const [permission, setPermission] = useState<MediaPermissionStatus>({ granted: false, status: 'prompt' })
+
   const [activeZipDate, setActiveZipDate] = useState<{
     dateKey: string
     dateLabel: string
@@ -420,11 +416,6 @@ export default function MediaPage() {
             permissionGranted={permission.granted}
             onRequestPermission={handleRequestPermission}
             onSelectFiles={() => fileInputRef.current?.click()}
-            onPreviewItem={(item, groupItems) => {
-              const list = groupItems && groupItems.length > 0 ? groupItems : allDatesList.flatMap((g) => g.items)
-              const idx = list.findIndex((it) => it.id === item.id)
-              setLightboxState({ items: list, index: Math.max(0, idx) })
-            }}
             onOpenZipModal={(dateKey, dateLabel, items) => {
               setActiveZipDate({ dateKey, dateLabel, items })
             }}
@@ -663,14 +654,8 @@ export default function MediaPage() {
                       {/* Photos / Videos Grid for this date */}
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                         {group.items.map((item) => (
-                          <button
+                          <div
                             key={item.id}
-                            type="button"
-                            onClick={() => {
-                              const list = group.items
-                              const idx = list.findIndex((it) => it.id === item.id)
-                              setLightboxState({ items: list, index: Math.max(0, idx) })
-                            }}
                             className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left transition hover:border-[var(--accent)] hover:shadow-xs"
                           >
                             {/* Thumbnail / Media Container */}
@@ -717,7 +702,7 @@ export default function MediaPage() {
                                 <span>{formatTimeOnly(item.date)}</span>
                               </div>
                             </div>
-                          </button>
+                          </div>
                         ))}
                       </div>
                     </section>
@@ -729,17 +714,7 @@ export default function MediaPage() {
         )}
       </div>
 
-      {/* Immersive Gallery Lightbox Modal */}
-      {lightboxState && (
-        <MediaLightboxModal
-          items={lightboxState.items}
-          currentIndex={lightboxState.index}
-          onClose={() => setLightboxState(null)}
-          onNavigate={(newIdx) =>
-            setLightboxState((prev) => (prev ? { ...prev, index: newIdx } : null))
-          }
-        />
-      )}
+
 
       {/* Date ZIP Export Modal */}
       {activeZipDate && (

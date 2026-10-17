@@ -33,7 +33,6 @@ interface DateMediaListProps {
   permissionGranted: boolean
   onRequestPermission: () => void
   onSelectFiles: () => void
-  onPreviewItem: (item: DeviceMediaItem, groupItems?: DeviceMediaItem[]) => void
   onOpenZipModal: (dateKey: string, dateLabel: string, items: DeviceMediaItem[]) => void
 }
 
@@ -85,7 +84,6 @@ export function DateMediaList({
   permissionGranted,
   onRequestPermission,
   onSelectFiles,
-  onPreviewItem,
   onOpenZipModal,
 }: DateMediaListProps) {
   const [openMenuDateKey, setOpenMenuDateKey] = useState<string | null>(null)
@@ -242,11 +240,9 @@ export function DateMediaList({
               <div className="mt-4 pt-3.5 border-t border-[var(--border)]">
                 <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
                   {group.items.map((item) => (
-                    <button
+                    <div
                       key={item.id}
-                      type="button"
-                      onClick={() => onPreviewItem(item, group.items)}
-                      className="group relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] text-left transition hover:border-[var(--accent)]"
+                      className="group relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] text-left"
                     >
                       {item.thumbnail ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -254,7 +250,7 @@ export function DateMediaList({
                           src={item.thumbnail}
                           alt={item.name}
                           loading="lazy"
-                          className="size-full object-cover transition duration-200 group-hover:scale-105"
+                          className="size-full object-cover"
                         />
                       ) : item.type === 'video' ? (
                         <div className="flex size-full items-center justify-center text-[var(--accent)]">
@@ -272,11 +268,7 @@ export function DateMediaList({
                           <span>{formatDuration(item.duration)}</span>
                         </div>
                       )}
-
-                      <div className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100">
-                        <Maximize2 size={10} />
-                      </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>

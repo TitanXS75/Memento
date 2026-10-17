@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react'
 import type { MediaItem, Trip } from '@/lib/db/schema'
 import { formatBytes } from '@/lib/services/hash'
 import { AddMediaToTripModal } from './AddMediaToTripModal'
-import { MediaLightboxModal } from './MediaLightboxModal'
 
 interface TripMediaGalleryProps {
   trip: Trip
@@ -42,7 +41,6 @@ export function TripMediaGallery({
 }: TripMediaGalleryProps) {
   const [filterType, setFilterType] = useState<'all' | 'photo' | 'video'>('all')
   const [showAddModal, setShowAddModal] = useState(false)
-  const [activePreviewIndex, setActivePreviewIndex] = useState<number | null>(null)
 
   const filteredItems = useMemo(() => {
     if (filterType === 'all') return mediaItems
@@ -150,13 +148,10 @@ export function TripMediaGallery({
                 {group.items.map((item) => {
                   const isCover = trip.coverMediaId === item.id
                   const thumb = item.thumbnailUri || item.localStorageReference || ''
-                  const globalIdx = filteredItems.findIndex((it) => it.id === item.id)
 
                   return (
-                    <button
+                    <div
                       key={item.id}
-                      type="button"
-                      onClick={() => setActivePreviewIndex(globalIdx)}
                       className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left transition hover:border-[var(--accent)] hover:shadow-xs"
                     >
                       <div className="relative aspect-square w-full overflow-hidden bg-[var(--surface-strong)]">
@@ -173,10 +168,34 @@ export function TripMediaGallery({
                           </div>
                         )}
 
-                        {isCover && (
-                          <span className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-[var(--accent)] px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-xs">
-                            <Star size={10} className="fill-white" /> Cover
-                          </span>
+                        {/* Top-left: Cover Badge or Set Cover action */}
+                        {item.mediaType === 'photo' && onSetCover && (
+                          <button
+                            type="button"
+                            onClick={() => onSetCover(item)}
+                            className={`absolute left-2 top-2 z-10 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-semibold transition ${
+                              isCover
+                                ? 'bg-[var(--accent)] text-white shadow-xs'
+                                : 'bg-black/60 text-white opacity-0 group-hover:opacity-100 hover:bg-black/80'
+                            }`}
+                            title={isCover ? 'Cover photo' : 'Set as cover'}
+                          >
+                            <Star size={10} className={isCover ? 'fill-white' : ''} />
+                            <span>{isCover ? 'Cover' : 'Set cover'}</span>
+                          </button>
+                        )}
+
+                        {/* Top-right: Delete from trip button */}
+                        {onDeleteMedia && (
+                          <button
+                            type="button"
+                            onClick={() => onDeleteMedia(item)}
+                            aria-label={`Remove ${item.filename} from trip`}
+                            className="absolute right-2 top-2 z-10 flex size-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 hover:bg-[var(--coral)] transition"
+                            title="Remove from trip"
+                          >
+                            <Trash2 size={12} />
+                          </button>
                         )}
 
                         {item.mediaType === 'video' && (
@@ -192,7 +211,7 @@ export function TripMediaGallery({
                         </p>
                         <p className="mt-0.5 text-[10px] text-[var(--muted)]">{formatBytes(item.sizeBytes)}</p>
                       </div>
-                    </button>
+                    </div>
                   )
                 })}
               </div>
@@ -210,22 +229,6 @@ export function TripMediaGallery({
           onAdded={() => {
             onRefresh()
             setShowAddModal(false)
-          }}
-        />
-      )}
-
-      {/* Lightbox Modal */}
-      {activePreviewIndex !== null && (
-        <MediaLightboxModal
-          items={filteredItems}
-          currentIndex={activePreviewIndex}
-          isCover={filteredItems[activePreviewIndex]?.id === trip.coverMediaId}
-          onClose={() => setActivePreviewIndex(null)}
-          onNavigate={(newIdx) => setActivePreviewIndex(newIdx)}
-          onSetCover={(item) => onSetCover(item)}
-          onDelete={(item) => {
-            onDeleteMedia(item)
-            setActivePreviewIndex(null)
           }}
         />
       )}

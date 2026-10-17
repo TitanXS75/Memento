@@ -58,7 +58,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
         onEditProfile={() => { setNameInput(profileName); setShowEditName(true) }}
       />
 
-      <main className="min-w-0 flex-1 px-5 pb-28 pt-6 sm:px-8 lg:px-12 lg:pb-10 lg:pt-8">
+      <main className="min-w-0 flex-1 px-3.5 pb-20 pt-3 sm:px-8 sm:pb-28 sm:pt-6 lg:px-12 lg:pb-10 lg:pt-8">
         {children}
       </main>
 
