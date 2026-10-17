@@ -91,7 +91,7 @@ public class DeviceMediaPlugin extends Plugin {
     }
 
     @PermissionCallback
-    private void mediaPermsCallback(PluginCall call) {
+    public void mediaPermsCallback(PluginCall call) {
         boolean granted = isMediaAccessGranted();
         JSObject ret = new JSObject();
         ret.put("granted", granted);
@@ -100,9 +100,77 @@ public class DeviceMediaPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void getStorageSummary(PluginCall call) {
+        Context ctx = getContext();
+        ContentResolver resolver = ctx.getContentResolver();
+
+        long photosCount = 0;
+        long photosBytes = 0;
+        long videosCount = 0;
+        long videosBytes = 0;
+
+        if (isMediaAccessGranted()) {
+            // Count photos and sum sizes efficiently without loading any bitmaps
+            try (Cursor cursor = resolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                new String[] { MediaStore.Images.Media.SIZE },
+                null,
+                null,
+                null
+            )) {
+                if (cursor != null) {
+                    int sizeCol = cursor.getColumnIndex(MediaStore.Images.Media.SIZE);
+                    while (cursor.moveToNext()) {
+                        photosCount++;
+                        if (sizeCol >= 0) {
+                            photosBytes += cursor.getLong(sizeCol);
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                Logger.error("DeviceMediaPlugin getStorageSummary photos failed", e);
+            }
+
+            // Count videos and sum sizes efficiently
+            try (Cursor cursor = resolver.query(
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                new String[] { MediaStore.Video.Media.SIZE },
+                null,
+                null,
+                null
+            )) {
+                if (cursor != null) {
+                    int sizeCol = cursor.getColumnIndex(MediaStore.Video.Media.SIZE);
+                    while (cursor.moveToNext()) {
+                        videosCount++;
+                        if (sizeCol >= 0) {
+                            videosBytes += cursor.getLong(sizeCol);
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                Logger.error("DeviceMediaPlugin getStorageSummary videos failed", e);
+            }
+        }
+
+        JSObject res = new JSObject();
+        res.put("photosCount", photosCount);
+        res.put("photosBytes", photosBytes);
+        res.put("videosCount", videosCount);
+        res.put("videosBytes", videosBytes);
+        call.resolve(res);
+    }
+
+    @PluginMethod
     public void getDeviceMedia(PluginCall call) {
         String type = call.getString("type", "all");
-        int limit = call.getInt("limit", 150);
+        int limit = call.getInt("limit", 100);
+        boolean includeThumbnails = call.getBoolean("includeThumbnails", true);
+
+        // Cap limit to 150 to keep bridge JSON payload safe and performant
+        if (limit > 150) {
+            limit = 150;
+        }
 
         JSObject result = new JSObject();
         JSArray imagesArray = new JSArray();
@@ -165,16 +233,18 @@ public class DeviceMediaPlugin extends Plugin {
                         item.put("orientation", orient);
                         item.put("uri", itemUri.toString());
 
-                        String thumb = loadBase64Thumbnail(resolver, itemUri, 640, 640);
-                        if (thumb != null) {
-                            item.put("thumbnail", thumb);
+                        if (includeThumbnails) {
+                            String thumb = loadBase64Thumbnail(resolver, itemUri, 160, 160);
+                            if (thumb != null) {
+                                item.put("thumbnail", thumb);
+                            }
                         }
 
                         imagesArray.put(item);
                         count++;
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Logger.error("DeviceMediaPlugin query images failed", e);
             }
         }
@@ -234,16 +304,18 @@ public class DeviceMediaPlugin extends Plugin {
                         item.put("type", "video");
                         item.put("uri", itemUri.toString());
 
-                        String thumb = loadBase64Thumbnail(resolver, itemUri, 640, 640);
-                        if (thumb != null) {
-                            item.put("thumbnail", thumb);
+                        if (includeThumbnails) {
+                            String thumb = loadBase64Thumbnail(resolver, itemUri, 160, 160);
+                            if (thumb != null) {
+                                item.put("thumbnail", thumb);
+                            }
                         }
 
                         videosArray.put(item);
                         count++;
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Logger.error("DeviceMediaPlugin query videos failed", e);
             }
         }
@@ -256,10 +328,12 @@ public class DeviceMediaPlugin extends Plugin {
     private String loadBase64Thumbnail(ContentResolver resolver, Uri uri, int w, int h) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                Bitmap bmp = resolver.loadThumbnail(uri, new Size(w, h), null);
+                int thumbW = Math.max(80, Math.min(w, 200));
+                int thumbH = Math.max(80, Math.min(h, 200));
+                Bitmap bmp = resolver.loadThumbnail(uri, new Size(thumbW, thumbH), null);
                 if (bmp != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bmp.compress(Bitmap.CompressFormat.JPEG, 85, baos);
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos);
                     bmp.recycle();
                     byte[] bytes = baos.toByteArray();
                     return "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP);

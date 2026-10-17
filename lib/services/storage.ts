@@ -143,28 +143,16 @@ export async function calculateStorageStats(): Promise<StorageStats> {
   let photosBytes = 0
   let videosBytes = 0
 
-  const seenIds = new Set<string>()
-
-  // 1. Device media directly scanned from device
+  // 1. Efficient device media summary directly scanned without thumbnail memory overhead
   try {
-    const { getDeviceMedia } = await import('@/lib/services/media')
-    const devMedia = await getDeviceMedia('all', 1000)
-    for (const item of devMedia.images) {
-      if (!seenIds.has(item.id)) {
-        seenIds.add(item.id)
-        photosCount++
-        photosBytes += item.size || 0
-      }
-    }
-    for (const item of devMedia.videos) {
-      if (!seenIds.has(item.id)) {
-        seenIds.add(item.id)
-        videosCount++
-        videosBytes += item.size || 0
-      }
-    }
-  } catch {
-    // ignore
+    const { getDeviceStorageSummary } = await import('@/lib/services/media')
+    const summary = await getDeviceStorageSummary()
+    photosCount = summary.photosCount
+    photosBytes = summary.photosBytes
+    videosCount = summary.videosCount
+    videosBytes = summary.videosBytes
+  } catch (err) {
+    console.warn('Failed to retrieve device storage summary:', err)
   }
 
   // 2. Count local media stored in IndexedDB (avoid duplicates)

@@ -20,10 +20,22 @@ export interface MediaPermissionStatus {
   status: 'granted' | 'denied' | 'prompt'
 }
 
+export interface DeviceStorageSummary {
+  photosCount: number
+  photosBytes: number
+  videosCount: number
+  videosBytes: number
+}
+
 export interface NativeDeviceMediaPlugin {
   checkMediaPermissions(): Promise<MediaPermissionStatus>
   requestMediaPermissions(): Promise<MediaPermissionStatus>
-  getDeviceMedia(options?: { type?: 'all' | 'images' | 'videos'; limit?: number }): Promise<{
+  getStorageSummary(): Promise<DeviceStorageSummary>
+  getDeviceMedia(options?: {
+    type?: 'all' | 'images' | 'videos'
+    limit?: number
+    includeThumbnails?: boolean
+  }): Promise<{
     images: DeviceMediaItem[]
     videos: DeviceMediaItem[]
   }>
@@ -132,15 +144,51 @@ export async function requestMediaPermission(): Promise<MediaPermissionStatus> {
 }
 
 /**
+ * Efficiently retrieve device media storage summary (total count and bytes)
+ * without loading heavy thumbnail bitmaps into memory.
+ */
+export async function getDeviceStorageSummary(): Promise<DeviceStorageSummary> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const res = await NativeDeviceMedia.getStorageSummary()
+      return {
+        photosCount: res.photosCount || 0,
+        photosBytes: res.photosBytes || 0,
+        videosCount: res.videosCount || 0,
+        videosBytes: res.videosBytes || 0,
+      }
+    } catch (err) {
+      console.warn('Native getStorageSummary failed, fallback to counting:', err)
+    }
+  }
+
+  // Web fallback: calculate from web-stored media
+  const webData = getWebStoredMedia()
+  let photosCount = webData.images.length
+  let photosBytes = 0
+  for (const img of webData.images) {
+    photosBytes += img.size || 0
+  }
+  let videosCount = webData.videos.length
+  let videosBytes = 0
+  for (const vid of webData.videos) {
+    videosBytes += vid.size || 0
+  }
+
+  return { photosCount, photosBytes, videosCount, videosBytes }
+}
+
+/**
  * Retrieve device media items (images and/or videos).
  */
 export async function getDeviceMedia(
   type: 'all' | 'images' | 'videos' = 'all',
-  limit: number = 150
+  limit: number = 100,
+  includeThumbnails = true
 ): Promise<{ images: DeviceMediaItem[]; videos: DeviceMediaItem[] }> {
   if (Capacitor.isNativePlatform()) {
     try {
-      const res = await NativeDeviceMedia.getDeviceMedia({ type, limit })
+      const res = await NativeDeviceMedia.getDeviceMedia({ type, limit, includeThumbnails })
       return {
         images: res.images || [],
         videos: res.videos || [],

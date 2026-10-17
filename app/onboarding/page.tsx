@@ -54,8 +54,7 @@ export default function OnboardingPage() {
       await new Promise((r) => setTimeout(r, 400))
       setStep('ready')
     } catch (err) {
-      console.error(err)
-      await calculateStorageStats().catch(() => {})
+      console.warn('Storage permission/calculation notice:', err)
       setStep('ready')
     } finally {
       setIsCalculating(false)
