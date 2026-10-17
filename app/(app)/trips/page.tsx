@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { Package, Plus, Search } from 'lucide-react'
+import { FileArchive, Package, Plus, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { CreateTripModal } from '@/components/app/CreateTripModal'
 import { EmptyState } from '@/components/app/EmptyState'
 import { TripCard } from '@/components/app/TripCard'
+import { ZipExtractorModal } from '@/components/app/ZipExtractorModal'
 import { useArchivesStore } from '@/lib/store/archives'
 import { useTripsStore } from '@/lib/store/trips'
 import { useUiStore } from '@/lib/store/ui'
@@ -31,6 +32,7 @@ export default function TripsPage() {
 
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [showZipExtractor, setShowZipExtractor] = useState(false)
 
   useEffect(() => {
     loadTrips()
@@ -55,6 +57,16 @@ export default function TripsPage() {
           <h1 className="mt-1 font-sans text-4xl">All trips</h1>
         </div>
         <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            id="trips-explore-zip-btn"
+            onClick={() => setShowZipExtractor(true)}
+            className="secondary-button h-11 inline-flex items-center gap-2"
+            aria-label="Explore and extract ZIP files"
+          >
+            <FileArchive size={16} className="text-[var(--accent)]" aria-hidden="true" />
+            <span>Explore ZIPs</span>
+          </button>
           <Link
             href="/archives"
             id="trips-archives-btn"
@@ -166,7 +178,16 @@ export default function TripsPage() {
         />
       )}
 
-
+      {showZipExtractor && (
+        <ZipExtractorModal
+          isOpen={showZipExtractor}
+          onClose={() => {
+            setShowZipExtractor(false)
+            loadTrips()
+            loadArchives()
+          }}
+        />
+      )}
     </>
   )
 }

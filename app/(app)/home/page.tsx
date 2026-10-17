@@ -9,7 +9,6 @@ import {
   Plus,
   Sun,
   Video,
-  Wifi,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
@@ -150,21 +149,6 @@ export default function HomePage() {
             <p className="relative mt-5 max-w-[310px] text-sm leading-relaxed text-white/65">
               Collect original photos with your people. No signal, no servers, no compromises.
             </p>
-            <div className="relative mt-7 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowCreate(true)}
-                className="primary-light"
-                id="home-create-trip-btn"
-              >
-                <Plus size={17} aria-hidden="true" />
-                Create a trip
-              </button>
-              <Link href="/nearby" className="primary-light">
-                <Wifi size={17} aria-hidden="true" />
-                Nearby
-              </Link>
-            </div>
           </div>
 
           {/* Storage card */}

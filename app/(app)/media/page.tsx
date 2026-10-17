@@ -33,6 +33,7 @@ import { formatBytes } from '@/lib/services/hash'
 import { useUiStore } from '@/lib/store/ui'
 import { DateMediaList, type MediaDateGroup } from '@/components/app/DateMediaList'
 import { DateZipModal } from '@/components/app/DateZipModal'
+import { MediaLightboxModal } from '@/components/app/MediaLightboxModal'
 
 type DateFilterPreset = 'all' | 'today' | 'week' | 'month' | 'custom'
 
@@ -127,7 +128,10 @@ export default function MediaPage() {
   const [videos, setVideos] = useState<DeviceMediaItem[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [permission, setPermission] = useState<MediaPermissionStatus>(() => getCachedMediaPermission())
-  const [previewItem, setPreviewItem] = useState<DeviceMediaItem | null>(null)
+  const [lightboxState, setLightboxState] = useState<{
+    items: DeviceMediaItem[]
+    index: number
+  } | null>(null)
   const [activeZipDate, setActiveZipDate] = useState<{
     dateKey: string
     dateLabel: string
@@ -416,7 +420,11 @@ export default function MediaPage() {
             permissionGranted={permission.granted}
             onRequestPermission={handleRequestPermission}
             onSelectFiles={() => fileInputRef.current?.click()}
-            onPreviewItem={(item) => setPreviewItem(item)}
+            onPreviewItem={(item, groupItems) => {
+              const list = groupItems && groupItems.length > 0 ? groupItems : allDatesList.flatMap((g) => g.items)
+              const idx = list.findIndex((it) => it.id === item.id)
+              setLightboxState({ items: list, index: Math.max(0, idx) })
+            }}
             onOpenZipModal={(dateKey, dateLabel, items) => {
               setActiveZipDate({ dateKey, dateLabel, items })
             }}
@@ -658,7 +666,11 @@ export default function MediaPage() {
                           <button
                             key={item.id}
                             type="button"
-                            onClick={() => setPreviewItem(item)}
+                            onClick={() => {
+                              const list = group.items
+                              const idx = list.findIndex((it) => it.id === item.id)
+                              setLightboxState({ items: list, index: Math.max(0, idx) })
+                            }}
                             className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left transition hover:border-[var(--accent)] hover:shadow-xs"
                           >
                             {/* Thumbnail / Media Container */}
@@ -717,108 +729,16 @@ export default function MediaPage() {
         )}
       </div>
 
-      {/* Media Detail & Preview Modal */}
-      {previewItem && (
-        <div
-          className="modal-backdrop"
-          role="presentation"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPreviewItem(null)
-          }}
-        >
-          <div
-            className="modal-card max-w-lg"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="media-preview-title"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
-              <div className="min-w-0 pr-3">
-                <p className="eyebrow">{previewItem.type === 'photo' ? 'Photo Details' : 'Video Details'}</p>
-                <h3 id="media-preview-title" className="truncate font-sans text-xl">
-                  {previewItem.name}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPreviewItem(null)}
-                aria-label="Close preview"
-                className="rounded-full p-1.5 text-[var(--muted)] hover:bg-[var(--surface-strong)] transition"
-              >
-                <X size={18} aria-hidden="true" />
-              </button>
-            </div>
-
-            {/* Media Image / Video Preview */}
-            <div className="mt-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-black/5 dark:bg-black/30">
-              {previewItem.thumbnail ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={previewItem.thumbnail}
-                  alt={previewItem.name}
-                  className="max-h-full max-w-full object-contain"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-[var(--muted)]">
-                  {previewItem.type === 'photo' ? <ImageIcon size={36} /> : <Video size={36} />}
-                  <span className="text-xs">Original media on phone storage</span>
-                </div>
-              )}
-            </div>
-
-            {/* Detailed Metadata Grid */}
-            <div className="mt-4 grid grid-cols-2 gap-2.5 rounded-xl bg-[var(--surface-strong)] p-3 text-xs">
-              <div className="flex items-center gap-2">
-                <Calendar size={13} className="shrink-0 text-[var(--accent)]" />
-                <span className="text-[var(--muted)]">Date:</span>
-                <span className="truncate font-medium text-[var(--foreground)]">{formatDateFull(previewItem.date)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock size={13} className="shrink-0 text-[var(--accent)]" />
-                <span className="text-[var(--muted)]">Time:</span>
-                <span className="font-medium text-[var(--foreground)]">{formatTimeOnly(previewItem.date)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <HardDrive size={13} className="shrink-0 text-[var(--accent)]" />
-                <span className="text-[var(--muted)]">Size:</span>
-                <span className="font-medium text-[var(--foreground)]">{formatBytes(previewItem.size)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Info size={13} className="shrink-0 text-[var(--accent)]" />
-                <span className="text-[var(--muted)]">Format:</span>
-                <span className="truncate font-medium uppercase text-[var(--foreground)]">
-                  {previewItem.mimeType ? previewItem.mimeType.split('/')[1] : previewItem.type}
-                </span>
-              </div>
-              {previewItem.width && previewItem.height ? (
-                <div className="col-span-2 flex items-center gap-2 border-t border-[var(--border)] pt-2">
-                  <Maximize2 size={13} className="shrink-0 text-[var(--accent)]" />
-                  <span className="text-[var(--muted)]">Resolution:</span>
-                  <span className="font-medium text-[var(--foreground)]">
-                    {formatResolution(previewItem.width, previewItem.height)}
-                  </span>
-                </div>
-              ) : null}
-              {previewItem.duration ? (
-                <div className="col-span-2 flex items-center gap-2 border-t border-[var(--border)] pt-2">
-                  <Play size={13} className="shrink-0 text-[var(--accent)]" />
-                  <span className="text-[var(--muted)]">Duration:</span>
-                  <span className="font-medium text-[var(--foreground)]">{formatDuration(previewItem.duration)}</span>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="mt-5 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setPreviewItem(null)}
-                className="secondary-button"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Immersive Gallery Lightbox Modal */}
+      {lightboxState && (
+        <MediaLightboxModal
+          items={lightboxState.items}
+          currentIndex={lightboxState.index}
+          onClose={() => setLightboxState(null)}
+          onNavigate={(newIdx) =>
+            setLightboxState((prev) => (prev ? { ...prev, index: newIdx } : null))
+          }
+        />
       )}
 
       {/* Date ZIP Export Modal */}

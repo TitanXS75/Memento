@@ -16,6 +16,12 @@ export function AppPreloader({
   const [isFadingOut, setIsFadingOut] = useState(false)
 
   useEffect(() => {
+    // Only lock document scrollbar while preloader is actively displayed
+    const prevHtmlOverflow = document.documentElement.style.overflow
+    const prevBodyOverflow = document.body.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+
     const startTime = Date.now()
 
     const handleComplete = () => {
@@ -24,7 +30,10 @@ export function AppPreloader({
 
       setTimeout(() => {
         setIsFadingOut(true)
-        // Smooth fade out duration: 600ms
+        // Unlock scroll as soon as preloader begins fading out
+        document.documentElement.style.overflow = ''
+        document.body.style.overflow = ''
+
         setTimeout(() => {
           setIsVisible(false)
         }, 600)
@@ -39,6 +48,8 @@ export function AppPreloader({
       return () => {
         clearTimeout(fallbackTimeout)
         window.removeEventListener('load', handleComplete)
+        document.documentElement.style.overflow = ''
+        document.body.style.overflow = ''
       }
     }
   }, [minDuration])
@@ -48,7 +59,7 @@ export function AppPreloader({
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--background)] px-6 transition-all duration-600 ease-out ${
+      className={`fixed inset-0 z-[9999] overflow-hidden select-none flex flex-col items-center justify-center bg-[var(--background)] px-6 transition-all duration-600 ease-out ${
         isFadingOut
           ? 'opacity-0 pointer-events-none'
           : 'opacity-100'

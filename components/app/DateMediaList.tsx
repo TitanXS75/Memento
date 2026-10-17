@@ -33,7 +33,7 @@ interface DateMediaListProps {
   permissionGranted: boolean
   onRequestPermission: () => void
   onSelectFiles: () => void
-  onPreviewItem: (item: DeviceMediaItem) => void
+  onPreviewItem: (item: DeviceMediaItem, groupItems?: DeviceMediaItem[]) => void
   onOpenZipModal: (dateKey: string, dateLabel: string, items: DeviceMediaItem[]) => void
 }
 
@@ -245,7 +245,7 @@ export function DateMediaList({
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => onPreviewItem(item)}
+                      onClick={() => onPreviewItem(item, group.items)}
                       className="group relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] text-left transition hover:border-[var(--accent)]"
                     >
                       {item.thumbnail ? (

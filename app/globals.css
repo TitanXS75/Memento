@@ -12,7 +12,14 @@
 :root { color-scheme: light; --background: #f5f3f8; --foreground: #191827; --sidebar: #ebe8f2; --surface: #fcfbfe; --surface-strong: #e4e0ed; --border: #d8d3e2; --muted: #777487; --accent: #4b3f72; --accent-soft: #e3def1; --coral: #b86c7c; }
 * { box-sizing: border-box; }
 html { background: var(--background); }
-body { margin: 0; background: var(--background); font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; background: var(--background); font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface-strong); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  * { scrollbar-width: thin; scrollbar-color: var(--surface-strong) transparent; }
+}
 button, input { font: inherit; }
 button { cursor: pointer; }
 ::selection { background: #d9e0e9; color: #20252b; }
